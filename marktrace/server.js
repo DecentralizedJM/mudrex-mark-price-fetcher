@@ -16,5 +16,5 @@ app.get('*', (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`MarkTrace serving on port ${PORT}`);
+  console.log(`PriceFetch serving on port ${PORT}`);
 });

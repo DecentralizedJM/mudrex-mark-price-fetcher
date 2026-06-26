@@ -82,5 +82,5 @@ app.get('*', (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Pricefetcher serving on port ${PORT}`);
+  console.log(`PriceFetcher serving on port ${PORT}`);
 });

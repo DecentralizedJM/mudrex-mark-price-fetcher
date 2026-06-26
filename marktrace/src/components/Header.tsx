@@ -25,7 +25,7 @@ export function Header() {
             <path d="M3 3v18h18" />
           </svg>
           <h1 className="text-2xl font-semibold tracking-tight text-primary-light dark:text-primary-dark">
-            Pricefetcher
+            PriceFetcher
           </h1>
           <CandleStream />
         </div>

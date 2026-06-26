@@ -55,7 +55,7 @@ export function buildCsv(
   ];
 
   const meta = [
-    `# Pricefetcher export`,
+    `# PriceFetcher export`,
     `# Symbol: ${result.normalizedSymbol}`,
     `# Timezone: ${timezone}`,
     `# Rows: ${result.summary.rowCount}`,

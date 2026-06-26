@@ -107,15 +107,15 @@
   }
 
   .blinking-eyes {
-    animation: eye-blink 4s ease-in-out infinite;
+    animation: eye-blink 2s linear infinite;
     transform-origin: center center;
   }
 
   @keyframes eye-blink {
-    0%, 92%, 100% {
+    0%, 96.5%, 100% {
       transform: scaleY(1);
     }
-    96% {
+    97.5% {
       transform: scaleY(0.12);
     }
   }

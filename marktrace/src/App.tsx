@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Download, RefreshCw } from 'lucide-react';
 import { analyzePriceMovement } from './lib/analysis';
-import { fetchPriceData } from './lib/api';
+import { fetchPriceDataViaApi } from './lib/api-client';
 import { buildCsv, buildCsvFilename, downloadCsv } from './lib/csv';
 import { defaultStartTime, defaultEndTime } from './lib/time';
 import type { FetchResult, LookupParams, PriceAnalysis } from './lib/types';
@@ -36,7 +36,7 @@ export default function App() {
     setLoading(true);
     setError(null);
 
-    const response = await fetchPriceData(params);
+    const response = await fetchPriceDataViaApi(params);
 
     if (isApiError(response)) {
       setError(response.message);

@@ -77,3 +77,4 @@ export const TIMEZONE_OPTIONS: { value: TimezoneId; label: string }[] = [
 
 export const MAX_CANDLES = 1440;
 export const GAP_WARNING_PCT = 1;
+export const MAX_RANGE_SECONDS = 86400; // 24 hours

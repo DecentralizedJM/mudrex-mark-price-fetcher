@@ -68,6 +68,42 @@ export async function loadSymbolSuggestions(): Promise<string[]> {
   return cachedSymbols;
 }
 
+export function setListedSymbols(symbols: string[]): void {
+  cachedSymbols = symbols.map((s) => normalizeSymbol(String(s)));
+}
+
+export function isSymbolListed(symbol: string, listed: string[]): boolean {
+  const normalized = symbol.toUpperCase();
+  return listed.some((s) => s.toUpperCase() === normalized);
+}
+
+export function suggestSimilarSymbols(symbol: string, listed: string[], limit = 3): string[] {
+  const normalized = symbol.toUpperCase();
+  const base = normalized.split('/')[0] ?? normalized;
+
+  const scored = listed
+    .map((candidate) => {
+      const upper = candidate.toUpperCase();
+      const candidateBase = upper.split('/')[0] ?? upper;
+      let score = 0;
+      if (upper === normalized) score += 100;
+      if (upper.startsWith(base) || base.startsWith(candidateBase)) score += 50;
+      if (upper.includes(base) || candidateBase.includes(base)) score += 25;
+      return { candidate, score };
+    })
+    .filter((item) => item.score > 0 && item.candidate.toUpperCase() !== normalized)
+    .sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, limit).map((item) => item.candidate);
+}
+
+export function formatUnlistedSymbolError(symbol: string, suggestions: string[]): string {
+  if (suggestions.length > 0) {
+    return `${symbol} is not a listed futures symbol. Did you mean: ${suggestions.join(', ')}?`;
+  }
+  return `${symbol} is not a listed futures symbol. Pick a symbol from the suggestions list.`;
+}
+
 export function filterSymbols(symbols: string[], query: string, limit = 8): string[] {
   const q = query.trim().toUpperCase();
   if (!q) return symbols.slice(0, limit);
@@ -75,4 +111,21 @@ export function filterSymbols(symbols: string[], query: string, limit = 8): stri
   return symbols
     .filter((symbol) => symbol.includes(q) || symbol.replace('/', '').includes(q.replace('/', '')))
     .slice(0, limit);
+}
+
+export async function validateListedSymbol(symbol: string): Promise<string | null> {
+  let normalized: string;
+  try {
+    normalized = normalizeSymbol(symbol);
+  } catch (err) {
+    return err instanceof Error ? err.message : 'Invalid symbol format.';
+  }
+
+  const listed = await loadSymbolSuggestions();
+  if (!isSymbolListed(normalized, listed)) {
+    const suggestions = suggestSimilarSymbols(normalized, listed);
+    return formatUnlistedSymbolError(normalized, suggestions);
+  }
+
+  return null;
 }

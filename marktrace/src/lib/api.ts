@@ -1,5 +1,12 @@
 import { fetchCandlesChunked } from './api-chunk';
-import { normalizeSymbol } from './symbols';
+import {
+  normalizeSymbol,
+  validateListedSymbol,
+  loadSymbolSuggestions,
+  isSymbolListed,
+  suggestSimilarSymbols,
+  formatUnlistedSymbolError,
+} from './symbols';
 import { localRangeToEpoch, estimateCandleCount } from './time';
 import type {
   ApiError,
@@ -10,6 +17,7 @@ import type {
   MarkCandle,
   MergedRow,
 } from './types';
+import { MAX_RANGE_SECONDS } from './types';
 
 function mergeCandles(
   ltpCandles: LtpCandle[],
@@ -105,6 +113,11 @@ export function validateLookup(params: LookupParams): string | null {
 
   if (end <= start) return 'End time must be after start time.';
 
+  const rangeSeconds = end - start;
+  if (rangeSeconds > MAX_RANGE_SECONDS) {
+    return 'Time range cannot exceed 24 hours. Please narrow your start and end times.';
+  }
+
   const candleCount = estimateCandleCount(start, end, params.aggregation);
   if (candleCount > 1440 * 24) {
     return 'Range is too large. Please narrow the time window.';
@@ -120,10 +133,19 @@ export function getRangeWarning(params: LookupParams): string | null {
   if (candleCount > 1440) {
     return `This range may produce ~${candleCount} candles at ${params.aggregation}. Requests will be auto-chunked.`;
   }
-  if (end - start > 86400) {
-    return 'Range exceeds 24 hours. Consider narrowing for faster results.';
-  }
   return null;
+}
+
+/** Quick kline probe to confirm symbol has any recent market data */
+async function probeSymbolHasData(symbol: string): Promise<boolean> {
+  const now = Math.floor(Date.now() / 1000);
+  const probeStart = now - 7 * 86400; // last 7 days
+  try {
+    const candles = await fetchCandlesChunked('kline', symbol, '1h', probeStart, now);
+    return candles.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 export async function fetchPriceData(params: LookupParams): Promise<FetchResult | ApiError> {
@@ -137,6 +159,11 @@ export async function fetchPriceData(params: LookupParams): Promise<FetchResult 
     normalizedSymbol = normalizeSymbol(params.symbol);
   } catch (err) {
     return { message: err instanceof Error ? err.message : 'Invalid symbol format.' };
+  }
+
+  const listedError = await validateListedSymbol(normalizedSymbol);
+  if (listedError) {
+    return { message: listedError };
   }
 
   const { start, end } = localRangeToEpoch(
@@ -157,7 +184,20 @@ export async function fetchPriceData(params: LookupParams): Promise<FetchResult 
     );
 
     if (rows.length === 0) {
-      return { message: 'No data returned for this symbol and time range.' };
+      const hasRecentData = await probeSymbolHasData(normalizedSymbol);
+      if (!hasRecentData) {
+        const listed = await loadSymbolSuggestions();
+        if (!isSymbolListed(normalizedSymbol, listed)) {
+          const suggestions = suggestSimilarSymbols(normalizedSymbol, listed);
+          return { message: formatUnlistedSymbolError(normalizedSymbol, suggestions) };
+        }
+        return {
+          message: `${normalizedSymbol} appears to have no recent kline data. It may be delisted or inactive.`,
+        };
+      }
+      return {
+        message: `No price data for ${normalizedSymbol} in the selected time range. Try a different window.`,
+      };
     }
 
     return {

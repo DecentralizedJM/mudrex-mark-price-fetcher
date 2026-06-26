@@ -19,7 +19,10 @@ ENV NODE_ENV=production
 COPY marktrace/package.json marktrace/package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY marktrace/server.js ./
+COPY marktrace/server.ts ./
+COPY marktrace/src ./src
+COPY marktrace/public ./public
+COPY marktrace/tsconfig.json ./
 COPY --from=build /app/dist ./dist
 
 EXPOSE 3000

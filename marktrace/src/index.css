@@ -107,7 +107,7 @@
   }
 
   .blinking-eyes {
-    animation: eye-blink 2s linear infinite;
+    animation: eye-blink 3s linear infinite;
     transform-origin: center center;
   }
 

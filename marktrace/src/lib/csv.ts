@@ -55,7 +55,7 @@ export function buildCsv(
   ];
 
   const meta = [
-    `# PriceFetch export`,
+    `# Pricefetcher export`,
     `# Symbol: ${result.normalizedSymbol}`,
     `# Timezone: ${timezone}`,
     `# Rows: ${result.summary.rowCount}`,
@@ -88,7 +88,7 @@ export function buildCsvFilename(
   const sanitizedSymbol = symbol.replace(/\//g, '-').replace(/[^a-zA-Z0-9-]/g, '');
   const startPart = startTime.replace(/[-:]/g, '').replace('T', '_');
   const endPart = endTime.replace(/[-:]/g, '').replace('T', '_');
-  return `pricefetch_${sanitizedSymbol}_${startPart}_to_${endPart}.csv`;
+  return `pricefetcher_${sanitizedSymbol}_${startPart}_to_${endPart}.csv`;
 }
 
 export function formatPrice(value: number | null | undefined, digits = 6): string {

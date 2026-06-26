@@ -1,4 +1,4 @@
-# PriceFetch
+# Pricefetcher
 
 **Mudrex LTP & Mark Price Lookup** — an internal, public (no-auth) support dashboard for looking up historical Last Traded Price (LTP) and Mark Price data around incident timestamps.
 

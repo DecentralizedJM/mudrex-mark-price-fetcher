@@ -13,10 +13,7 @@ import type {
 
 function mergeCandles(
   ltpCandles: LtpCandle[],
-  markCandles: MarkCandle[],
-  coreStart: number,
-  coreEnd: number,
-  referenceEpoch?: number,
+  markCandles: MarkCandle[]
 ): MergedRow[] {
   const times = new Set<number>();
   ltpCandles.forEach((c) => times.add(c[0]));
@@ -30,15 +27,6 @@ function mergeCandles(
   return sortedTimes.map((openTime) => {
     const ltp = ltpMap.get(openTime);
     const mark = markMap.get(openTime);
-    const isBuffer = openTime < coreStart || openTime > coreEnd;
-
-    let label: string | undefined;
-    if (referenceEpoch !== undefined) {
-      const diffMinutes = Math.round((openTime - referenceEpoch) / 60);
-      if (diffMinutes === 0) label = 'T';
-      else if (diffMinutes > 0) label = `T+${diffMinutes}`;
-      else label = `T${diffMinutes}`;
-    }
 
     return {
       openTime,
@@ -59,8 +47,6 @@ function mergeCandles(
             close: mark[4],
           }
         : undefined,
-      isBuffer,
-      label,
     };
   });
 }
@@ -108,21 +94,18 @@ function computeSummary(rows: MergedRow[]): FetchSummary {
 
 export function validateLookup(params: LookupParams): string | null {
   if (!params.symbol.trim()) return 'Symbol is required.';
-  if (!params.date) return 'Date is required.';
-  if (!params.startTime) return 'Start time is required.';
-  if (!params.endTime) return 'End time is required.';
+  if (!params.startTime) return 'Start date & time is required.';
+  if (!params.endTime) return 'End date & time is required.';
 
-  const { coreStart, coreEnd } = localRangeToEpoch(
-    params.date,
+  const { start, end } = localRangeToEpoch(
     params.startTime,
     params.endTime,
-    params.timezone,
-    0,
+    params.timezone
   );
 
-  if (coreEnd <= coreStart) return 'End time must be after start time.';
+  if (end <= start) return 'End time must be after start time.';
 
-  const candleCount = estimateCandleCount(coreStart, coreEnd, params.aggregation);
+  const candleCount = estimateCandleCount(start, end, params.aggregation);
   if (candleCount > 1440 * 24) {
     return 'Range is too large. Please narrow the time window.';
   }
@@ -131,18 +114,13 @@ export function validateLookup(params: LookupParams): string | null {
 }
 
 export function getRangeWarning(params: LookupParams): string | null {
-  const { coreStart, coreEnd } = localRangeToEpoch(
-    params.date,
-    params.startTime,
-    params.endTime,
-    params.timezone,
-    0,
-  );
-  const candleCount = estimateCandleCount(coreStart, coreEnd, params.aggregation);
+  if (!params.startTime || !params.endTime) return null;
+  const { start, end } = localRangeToEpoch(params.startTime, params.endTime, params.timezone);
+  const candleCount = estimateCandleCount(start, end, params.aggregation);
   if (candleCount > 1440) {
     return `This range may produce ~${candleCount} candles at ${params.aggregation}. Requests will be auto-chunked.`;
   }
-  if (coreEnd - coreStart > 86400) {
+  if (end - start > 86400) {
     return 'Range exceeds 24 hours. Consider narrowing for faster results.';
   }
   return null;
@@ -161,38 +139,21 @@ export async function fetchPriceData(params: LookupParams): Promise<FetchResult 
     return { message: err instanceof Error ? err.message : 'Invalid symbol format.' };
   }
 
-  const { coreStart, coreEnd, fetchStart, fetchEnd } = localRangeToEpoch(
-    params.date,
+  const { start, end } = localRangeToEpoch(
     params.startTime,
     params.endTime,
-    params.timezone,
-    params.bufferMinutes,
+    params.timezone
   );
-
-  let referenceEpoch: number | undefined;
-  if (params.referenceTime) {
-    const ref = localRangeToEpoch(
-      params.date,
-      params.referenceTime,
-      params.referenceTime,
-      params.timezone,
-      0,
-    );
-    referenceEpoch = ref.coreStart;
-  }
 
   try {
     const [ltpCandles, markCandles] = await Promise.all([
-      fetchCandlesChunked('kline', normalizedSymbol, params.aggregation, fetchStart, fetchEnd),
-      fetchCandlesChunked('mark-kline', normalizedSymbol, params.aggregation, fetchStart, fetchEnd),
+      fetchCandlesChunked('kline', normalizedSymbol, params.aggregation, start, end),
+      fetchCandlesChunked('mark-kline', normalizedSymbol, params.aggregation, start, end),
     ]);
 
     const rows = mergeCandles(
       ltpCandles as LtpCandle[],
-      markCandles as MarkCandle[],
-      coreStart,
-      coreEnd,
-      referenceEpoch,
+      markCandles as MarkCandle[]
     );
 
     if (rows.length === 0) {
@@ -204,10 +165,8 @@ export async function fetchPriceData(params: LookupParams): Promise<FetchResult 
       normalizedSymbol,
       rows,
       summary: computeSummary(rows),
-      coreStart,
-      coreEnd,
-      fetchStart,
-      fetchEnd,
+      fetchStart: start,
+      fetchEnd: end,
     };
   } catch (err) {
     return { message: err instanceof Error ? err.message : 'Failed to fetch price data.' };

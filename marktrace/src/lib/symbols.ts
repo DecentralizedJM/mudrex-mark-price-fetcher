@@ -6,15 +6,21 @@ export function normalizeSymbol(input: string): string {
     throw new Error('Symbol is required.');
   }
 
+  const validRegex = /^[A-Z0-9]+$/;
+
   if (trimmed.includes('/')) {
     const [base, quote] = trimmed.split('/').map((part) => part.trim().toUpperCase());
-    if (!base || !quote) {
-      throw new Error('Use BASE/QUOTE format, e.g. ESPORTS/USDT.');
+    if (!base || !quote || !validRegex.test(base) || !validRegex.test(quote)) {
+      throw new Error('Invalid symbol format. Use BASE/QUOTE, e.g. ESPORTS/USDT.');
     }
     return `${base}/${quote}`;
   }
 
   const upper = trimmed.toUpperCase();
+  if (!validRegex.test(upper)) {
+    throw new Error('Invalid symbol format. Symbols must only contain letters and numbers.');
+  }
+
   for (const quote of KNOWN_QUOTES) {
     if (upper.endsWith(quote) && upper.length > quote.length) {
       const base = upper.slice(0, -quote.length);

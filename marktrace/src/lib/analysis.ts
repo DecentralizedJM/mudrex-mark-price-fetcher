@@ -37,8 +37,7 @@ export function analyzePriceMovement(
   result: FetchResult,
   timezone: TimezoneId,
 ): PriceAnalysis {
-  const coreRows = result.rows.filter((r) => !r.isBuffer);
-  const rows = coreRows.length > 0 ? coreRows : result.rows;
+  const rows = result.rows;
   const { summary, normalizedSymbol } = result;
 
   const firstLtp = rows.find((r) => r.ltp)?.ltp?.close;

@@ -4,13 +4,10 @@ export type TimezoneId = 'Asia/Kolkata' | 'UTC';
 
 export interface LookupParams {
   symbol: string;
-  date: string;
-  startTime: string;
-  endTime: string;
+  startTime: string; // YYYY-MM-DDTHH:mm
+  endTime: string;   // YYYY-MM-DDTHH:mm
   timezone: TimezoneId;
   aggregation: Aggregation;
-  bufferMinutes: number;
-  referenceTime?: string;
 }
 
 export type LtpCandle = [number, number, number, number, number, number];
@@ -31,8 +28,6 @@ export interface MergedRow {
     low: number;
     close: number;
   };
-  isBuffer: boolean;
-  label?: string;
 }
 
 export interface FetchSummary {
@@ -51,8 +46,6 @@ export interface FetchResult {
   normalizedSymbol: string;
   rows: MergedRow[];
   summary: FetchSummary;
-  coreStart: number;
-  coreEnd: number;
   fetchStart: number;
   fetchEnd: number;
 }

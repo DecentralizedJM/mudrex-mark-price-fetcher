@@ -15,13 +15,12 @@ function formatNum(value: number | undefined | null): string {
   return String(value);
 }
 
-function rowToCsv(row: MergedRow, timezone: TimezoneId, includeLabel: boolean): string[] {
+function rowToCsv(row: MergedRow, timezone: TimezoneId): string[] {
   const markLtpGap =
     row.ltp && row.mark ? row.mark.close - row.ltp.close : null;
 
   const cols = [
     formatEpoch(row.openTime, timezone),
-    ...(includeLabel ? [row.label ?? ''] : []),
     formatNum(row.ltp?.open),
     formatNum(row.ltp?.high),
     formatNum(row.ltp?.low),
@@ -32,7 +31,6 @@ function rowToCsv(row: MergedRow, timezone: TimezoneId, includeLabel: boolean): 
     formatNum(row.mark?.low),
     formatNum(row.mark?.close),
     markLtpGap === null ? '' : String(markLtpGap),
-    row.isBuffer ? 'buffer' : 'core',
   ];
 
   return cols.map(escapeCsv);
@@ -41,11 +39,9 @@ function rowToCsv(row: MergedRow, timezone: TimezoneId, includeLabel: boolean): 
 export function buildCsv(
   result: FetchResult,
   timezone: TimezoneId,
-  includeLabel: boolean,
 ): string {
   const headers = [
     'Time',
-    ...(includeLabel ? ['Label'] : []),
     'LTP Open',
     'LTP High',
     'LTP Low',
@@ -56,11 +52,10 @@ export function buildCsv(
     'Mark Low',
     'Mark Close',
     'Mark-LTP Close',
-    'Range Type',
   ];
 
   const meta = [
-    `# MarkTrace export`,
+    `# PriceFetch export`,
     `# Symbol: ${result.normalizedSymbol}`,
     `# Timezone: ${timezone}`,
     `# Rows: ${result.summary.rowCount}`,
@@ -69,7 +64,7 @@ export function buildCsv(
   const lines = [
     ...meta,
     headers.join(','),
-    ...result.rows.map((row) => rowToCsv(row, timezone, includeLabel).join(',')),
+    ...result.rows.map((row) => rowToCsv(row, timezone).join(',')),
   ];
 
   return `\uFEFF${lines.join('\n')}`;
@@ -87,15 +82,13 @@ export function downloadCsv(content: string, filename: string): void {
 
 export function buildCsvFilename(
   symbol: string,
-  date: string,
   startTime: string,
   endTime: string,
 ): string {
   const sanitizedSymbol = symbol.replace(/\//g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-  const datePart = date.replace(/-/g, '');
-  const startPart = startTime.replace(':', '');
-  const endPart = endTime.replace(':', '');
-  return `marktrace_${sanitizedSymbol}_${datePart}_${startPart}-${endPart}.csv`;
+  const startPart = startTime.replace(/[-:]/g, '').replace('T', '_');
+  const endPart = endTime.replace(/[-:]/g, '').replace('T', '_');
+  return `pricefetch_${sanitizedSymbol}_${startPart}_to_${endPart}.csv`;
 }
 
 export function formatPrice(value: number | null | undefined, digits = 6): string {

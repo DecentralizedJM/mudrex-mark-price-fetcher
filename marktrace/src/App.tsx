@@ -3,7 +3,7 @@ import { Download, RefreshCw } from 'lucide-react';
 import { analyzePriceMovement } from './lib/analysis';
 import { fetchPriceData } from './lib/api';
 import { buildCsv, buildCsvFilename, downloadCsv } from './lib/csv';
-import { todayInTimezone } from './lib/time';
+import { defaultStartTime, defaultEndTime } from './lib/time';
 import type { FetchResult, LookupParams, PriceAnalysis } from './lib/types';
 import { AnalysisPanel } from './components/AnalysisPanel';
 import { Header } from './components/Header';
@@ -15,12 +15,10 @@ import { Card } from './components/ui/Card';
 
 const defaultParams = (): LookupParams => ({
   symbol: '',
-  date: todayInTimezone('Asia/Kolkata'),
-  startTime: '',
-  endTime: '',
+  startTime: defaultStartTime('Asia/Kolkata'),
+  endTime: defaultEndTime('Asia/Kolkata'),
   timezone: 'Asia/Kolkata',
   aggregation: '1m',
-  bufferMinutes: 0,
 });
 
 function isApiError(value: unknown): value is { message: string } {
@@ -33,8 +31,6 @@ export default function App() {
   const [analysis, setAnalysis] = useState<PriceAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const showLabel = Boolean(params.referenceTime);
 
   const handleFetch = useCallback(async () => {
     setLoading(true);
@@ -56,10 +52,9 @@ export default function App() {
 
   const handleDownload = () => {
     if (!result) return;
-    const csv = buildCsv(result, params.timezone, showLabel);
+    const csv = buildCsv(result, params.timezone);
     const filename = buildCsvFilename(
       result.normalizedSymbol,
-      params.date,
       params.startTime,
       params.endTime,
     );
@@ -113,14 +108,27 @@ export default function App() {
             <ResultsTable
               rows={result?.rows ?? []}
               timezone={params.timezone}
-              showLabel={showLabel}
               loading={loading}
             />
           </Card>
         </div>
 
-        <footer className="mt-10 border-t border-border-light pt-6 text-center text-xs text-secondary-light dark:border-border-dark dark:text-secondary-dark">
-          Internal tool · Public market data · No auth
+        <footer className="mt-10 border-t border-border-light pt-6 pb-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary-light dark:border-border-dark dark:text-secondary-dark">
+          <div>Internal tool · Public market data · No auth</div>
+          <div className="flex items-center gap-2">
+            <span>Developed by Jithin Mohandas</span>
+            <a
+              href="https://github.com/DecentralizedJM"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary-light dark:text-primary-dark hover:text-accent dark:hover:text-accent-dark transition-colors"
+              title="GitHub Profile"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+              </svg>
+            </a>
+          </div>
         </footer>
       </div>
     </div>

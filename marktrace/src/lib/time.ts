@@ -2,37 +2,22 @@ import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { aggregationToSeconds } from './api-chunk';
 import type { Aggregation, TimezoneId } from './types';
 
-export function parseLocalDateTime(date: string, time: string, timezone: TimezoneId): Date {
-  const [year, month, day] = date.split('-').map(Number);
-  const [hours, minutes] = time.split(':').map(Number);
-  const localIso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-  return fromZonedTime(localIso, timezone);
+export function parseLocalDateTime(datetimeLocal: string, timezone: TimezoneId): Date {
+  const iso = `${datetimeLocal}:00`;
+  return fromZonedTime(iso, timezone);
 }
 
 export function localRangeToEpoch(
-  date: string,
   startTime: string,
   endTime: string,
-  timezone: TimezoneId,
-  bufferMinutes: number,
-): {
-  coreStart: number;
-  coreEnd: number;
-  fetchStart: number;
-  fetchEnd: number;
-} {
-  const coreStartDate = parseLocalDateTime(date, startTime, timezone);
-  const coreEndDate = parseLocalDateTime(date, endTime, timezone);
-
-  const coreStart = Math.floor(coreStartDate.getTime() / 1000);
-  const coreEnd = Math.floor(coreEndDate.getTime() / 1000);
-  const bufferSeconds = bufferMinutes * 60;
+  timezone: TimezoneId
+): { start: number; end: number } {
+  const startDate = parseLocalDateTime(startTime, timezone);
+  const endDate = parseLocalDateTime(endTime, timezone);
 
   return {
-    coreStart,
-    coreEnd,
-    fetchStart: coreStart - bufferSeconds,
-    fetchEnd: coreEnd + bufferSeconds,
+    start: Math.floor(startDate.getTime() / 1000),
+    end: Math.floor(endDate.getTime() / 1000),
   };
 }
 
@@ -42,12 +27,15 @@ export function formatEpoch(epoch: number, timezone: TimezoneId): string {
   return `${formatted} ${tzLabel}`;
 }
 
-export function formatTimeOnly(epoch: number, timezone: TimezoneId): string {
-  return formatInTimeZone(epoch * 1000, timezone, 'HH:mm');
+export function defaultStartTime(timezone: TimezoneId): string {
+  const d = new Date();
+  d.setHours(d.getHours() - 1);
+  return formatInTimeZone(d, timezone, "yyyy-MM-dd'T'HH:mm");
 }
 
-export function todayInTimezone(timezone: TimezoneId): string {
-  return formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd');
+export function defaultEndTime(timezone: TimezoneId): string {
+  const d = new Date();
+  return formatInTimeZone(d, timezone, "yyyy-MM-dd'T'HH:mm");
 }
 
 export function estimateCandleCount(

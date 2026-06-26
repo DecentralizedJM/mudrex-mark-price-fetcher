@@ -6,7 +6,6 @@ import { GAP_WARNING_PCT } from '../lib/types';
 interface ResultsTableProps {
   rows: MergedRow[];
   timezone: TimezoneId;
-  showLabel: boolean;
   loading?: boolean;
 }
 
@@ -15,7 +14,7 @@ function gapPct(row: MergedRow): number | null {
   return (Math.abs(row.mark.close - row.ltp.close) / row.ltp.close) * 100;
 }
 
-export function ResultsTable({ rows, timezone, showLabel, loading }: ResultsTableProps) {
+export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
   if (loading) {
     return (
       <div className="space-y-2">
@@ -47,7 +46,6 @@ export function ResultsTable({ rows, timezone, showLabel, loading }: ResultsTabl
 
   const headers = [
     'Time',
-    ...(showLabel ? ['Label'] : []),
     'LTP Open',
     'LTP High',
     'LTP Low',
@@ -86,25 +84,13 @@ export function ResultsTable({ rows, timezone, showLabel, loading }: ResultsTabl
             return (
               <tr
                 key={row.openTime}
-                className={`border-b border-border-light transition-colors hover:bg-neutral-50 dark:border-border-dark dark:hover:bg-neutral-900/50 ${
-                  row.isBuffer ? 'bg-amber-50/40 dark:bg-amber-950/10' : ''
-                }`}
+                className="border-b border-border-light transition-colors hover:bg-neutral-50 dark:border-border-dark dark:hover:bg-neutral-900/50"
               >
                 <td className="sticky left-0 z-10 whitespace-nowrap bg-inherit px-3 py-2.5 font-mono text-xs tabular-nums">
                   <div className="flex items-center gap-2">
                     <span>{formatEpoch(row.openTime, timezone)}</span>
-                    {row.isBuffer && (
-                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
-                        buffer
-                      </span>
-                    )}
                   </div>
                 </td>
-                {showLabel && (
-                  <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs tabular-nums">
-                    {row.label ?? '—'}
-                  </td>
-                )}
                 <td className="px-3 py-2.5 font-mono tabular-nums">{formatPrice(row.ltp?.open)}</td>
                 <td className="px-3 py-2.5 font-mono tabular-nums">{formatPrice(row.ltp?.high)}</td>
                 <td className="px-3 py-2.5 font-mono tabular-nums">{formatPrice(row.ltp?.low)}</td>

@@ -11,34 +11,34 @@ export default {
       },
       colors: {
         page: {
-          light: '#FAFAFA',
-          dark: '#0A0A0A',
+          light: '#F8F9FA',
+          dark: '#12141A', // bitwarden dark page
         },
         card: {
           light: '#FFFFFF',
-          dark: '#141414',
+          dark: '#1C1E26', // bitwarden dark card
         },
         primary: {
-          light: '#0A0A0A',
-          dark: '#FAFAFA',
+          light: '#1A1A1A',
+          dark: '#F0F0F0',
         },
         secondary: {
-          light: '#525252',
-          dark: '#A3A3A3',
+          light: '#6C757D',
+          dark: '#A0A5B0',
         },
         border: {
-          light: '#E5E5E5',
-          dark: '#262626',
+          light: '#DEE2E6',
+          dark: '#2D313A',
         },
         accent: {
-          DEFAULT: '#0066FF',
-          dark: '#3B82F6',
+          DEFAULT: '#175DDC', // bitwarden blue
+          dark: '#2A72F6',
         },
-        success: '#059669',
-        warning: '#D97706',
+        success: '#10B981',
+        warning: '#F59E0B',
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+        card: '0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
       },
       transitionDuration: {
         theme: '150ms',

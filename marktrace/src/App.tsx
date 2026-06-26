@@ -64,11 +64,11 @@ export default function App() {
   const hasResults = result !== null && !loading;
 
   return (
-    <div className="min-h-screen bg-page-light transition-colors duration-theme dark:bg-page-dark">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col bg-page-light transition-colors duration-theme dark:bg-page-dark">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6 lg:px-8">
         <Header />
 
-        <div className="space-y-6">
+        <div className="flex-1 space-y-6">
           <Card title="Lookup">
             <LookupForm
               params={params}
@@ -113,7 +113,7 @@ export default function App() {
           </Card>
         </div>
 
-        <footer className="mt-10 border-t border-border-light pt-6 pb-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary-light dark:border-border-dark dark:text-secondary-dark">
+        <footer className="mt-auto border-t border-border-light pt-6 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary-light dark:border-border-dark dark:text-secondary-dark">
           <div>Internal tool · Public market data · No auth</div>
           <div className="flex items-center gap-2">
             <span>Developed by Jithin Mohandas</span>

@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-page-light text-primary-light transition-colors duration-theme dark:bg-page-dark dark:text-primary-dark;
+  }
+
+  * {
+    @apply border-border-light dark:border-border-dark;
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}

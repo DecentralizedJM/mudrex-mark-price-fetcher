@@ -105,6 +105,12 @@ export function validateLookup(params: LookupParams): string | null {
   if (!params.startTime) return 'Start date & time is required.';
   if (!params.endTime) return 'End date & time is required.';
 
+  try {
+    normalizeSymbol(params.symbol);
+  } catch (err) {
+    return err instanceof Error ? err.message : 'Invalid symbol format.';
+  }
+
   const { start, end } = localRangeToEpoch(
     params.startTime,
     params.endTime,
@@ -127,6 +133,7 @@ export function validateLookup(params: LookupParams): string | null {
 }
 
 export function getRangeWarning(params: LookupParams): string | null {
+  if (validateLookup(params)) return null;
   if (!params.startTime || !params.endTime) return null;
   const { start, end } = localRangeToEpoch(params.startTime, params.endTime, params.timezone);
   const candleCount = estimateCandleCount(start, end, params.aggregation);

@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Download, RefreshCw } from 'lucide-react';
 import { analyzePriceMovement } from './lib/analysis';
 import { fetchPriceDataViaApi } from './lib/api-client';
+import { validateLookup } from './lib/api';
 import { buildCsv, buildCsvFilename, downloadCsv } from './lib/csv';
 import { defaultStartTime, defaultEndTime } from './lib/time';
 import type { FetchResult, LookupParams, PriceAnalysis } from './lib/types';
@@ -21,7 +22,7 @@ const defaultParams = (): LookupParams => ({
   aggregation: '1m',
 });
 
-function isApiError(value: unknown): value is { message: string } {
+function isFetchError(value: unknown): value is { message: string; retryable: boolean } {
   return typeof value === 'object' && value !== null && 'message' in value && !('rows' in value);
 }
 
@@ -29,17 +30,24 @@ export default function App() {
   const [params, setParams] = useState<LookupParams>(defaultParams);
   const [result, setResult] = useState<FetchResult | null>(null);
   const [analysis, setAnalysis] = useState<PriceAnalysis | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<{ message: string; retryable: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setApiError(null);
+  }, [params]);
+
   const handleFetch = useCallback(async () => {
+    const validationError = validateLookup(params);
+    if (validationError) return;
+
     setLoading(true);
-    setError(null);
+    setApiError(null);
 
     const response = await fetchPriceDataViaApi(params);
 
-    if (isApiError(response)) {
-      setError(response.message);
+    if (isFetchError(response)) {
+      setApiError({ message: response.message, retryable: response.retryable });
       setResult(null);
       setAnalysis(null);
     } else {
@@ -78,13 +86,15 @@ export default function App() {
             />
           </Card>
 
-          {error && (
+          {apiError && (
             <div className="flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900/50 dark:bg-red-950/30 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-              <Button variant="secondary" onClick={handleFetch} disabled={loading}>
-                <RefreshCw size={16} />
-                Retry
-              </Button>
+              <p className="text-sm text-red-800 dark:text-red-200">{apiError.message}</p>
+              {apiError.retryable && (
+                <Button variant="secondary" onClick={handleFetch} disabled={loading}>
+                  <RefreshCw size={16} />
+                  Retry
+                </Button>
+              )}
             </div>
           )}
 

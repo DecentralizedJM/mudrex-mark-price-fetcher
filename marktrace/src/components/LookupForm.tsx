@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getRangeWarning } from '../lib/api';
+import { getRangeWarning, validateLookup } from '../lib/api';
 import { filterSymbols, loadSymbolSuggestions } from '../lib/symbols';
 import {
   AGGREGATION_OPTIONS,
@@ -43,7 +43,9 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const validationError = validateLookup(params);
   const rangeWarning = getRangeWarning(params);
+  const canFetch = !validationError && !loading;
 
   const update = <K extends keyof LookupParams>(key: K, value: LookupParams[K]) => {
     onChange({ ...params, [key]: value });
@@ -58,6 +60,7 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canFetch) return;
     onSubmit();
   };
 
@@ -137,7 +140,7 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
       </div>
 
       <div className="flex justify-end pt-2">
-        <Button type="submit" disabled={loading} className="w-full sm:w-auto relative overflow-hidden group">
+        <Button type="submit" disabled={!canFetch} className="w-full sm:w-auto relative overflow-hidden group">
           {loading ? (
             <span className="flex items-center gap-2">
               <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -154,6 +157,12 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
           )}
         </Button>
       </div>
+
+      {validationError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+          {validationError}
+        </div>
+      )}
 
       {rangeWarning && (
         <div className="rounded-lg border border-warning/30 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-warning/40 dark:bg-amber-950/30 dark:text-amber-200">

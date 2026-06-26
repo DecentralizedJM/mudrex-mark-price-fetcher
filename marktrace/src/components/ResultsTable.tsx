@@ -62,12 +62,14 @@ export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
     <div className="overflow-x-auto rounded-lg border border-border-light dark:border-border-dark">
       <table className="min-w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-border-light bg-neutral-50 dark:border-border-dark dark:bg-neutral-900/60">
+          <tr className="border-b border-border-light bg-neutral-50 dark:border-border-dark dark:bg-neutral-900">
             {headers.map((h) => (
               <th
                 key={h}
                 className={`whitespace-nowrap px-3 py-3 text-xs font-semibold uppercase tracking-wide text-secondary-light dark:text-secondary-dark ${
-                  h === 'Time' ? 'sticky left-0 z-10 bg-neutral-50 dark:bg-neutral-900/60' : ''
+                  h === 'Time'
+                    ? 'sticky left-0 z-20 border-r border-border-light bg-neutral-50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)] dark:border-border-dark dark:bg-neutral-900 dark:shadow-[4px_0_8px_-4px_rgba(0,0,0,0.45)]'
+                    : ''
                 }`}
               >
                 {h}
@@ -84,9 +86,9 @@ export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
             return (
               <tr
                 key={row.openTime}
-                className="border-b border-border-light transition-colors hover:bg-neutral-50 dark:border-border-dark dark:hover:bg-neutral-900/50"
+                className="group border-b border-border-light bg-white transition-colors hover:bg-neutral-50 dark:border-border-dark dark:bg-card-dark dark:hover:bg-neutral-900/50"
               >
-                <td className="sticky left-0 z-10 whitespace-nowrap bg-inherit px-3 py-2.5 font-mono text-xs tabular-nums">
+                <td className="sticky left-0 z-10 whitespace-nowrap border-r border-border-light bg-white px-3 py-2.5 font-mono text-xs tabular-nums shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)] group-hover:bg-neutral-50 dark:border-border-dark dark:bg-card-dark dark:shadow-[4px_0_8px_-4px_rgba(0,0,0,0.45)] dark:group-hover:bg-neutral-900/50">
                   <div className="flex items-center gap-2">
                     <span>{formatEpoch(row.openTime, timezone)}</span>
                   </div>

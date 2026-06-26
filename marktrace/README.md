@@ -41,6 +41,23 @@ Optional rate limits (set in Railway variables):
 - `RATE_LIMIT_MAX` — default `120` requests per IP
 - `RATE_LIMIT_API_MAX` — default `30` price fetches per IP
 
+### Admin usage dashboard
+
+The public dashboard has **no login**. Usage is tracked silently (page loads, price fetches, CSV downloads, rate limits).
+
+A separate admin app is available at **`/admin`** (e.g. `https://pricefetch.up.railway.app/admin`).
+
+Set these Railway variables:
+
+- `ADMIN_EMAIL` — bootstrap admin email
+- `ADMIN_PASSWORD` — bootstrap admin password
+
+The admin dashboard shows summary stats, recent activity (filterable), per-IP breakdown with last used, and failed fetches. Events are kept in memory (last 100000) and reset on redeploy.
+
+Optional: `USAGE_MAX_EVENTS` — max events in memory (default `100000`).
+
+Local dev: main app at [http://localhost:5173](http://localhost:5173), admin at [http://localhost:5173/admin.html](http://localhost:5173/admin.html) (production serves `/admin`).
+
 ## Usage
 
 1. Enter a symbol (e.g. `ESPORTS/USDT`, `esportsusdt`, or `ESPORTSUSDT`).

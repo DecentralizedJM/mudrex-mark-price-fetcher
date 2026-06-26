@@ -5,6 +5,7 @@ import { fetchPriceDataViaApi } from './lib/api-client';
 import { validateLookup } from './lib/api';
 import { buildCsv, buildCsvFilename, downloadCsv } from './lib/csv';
 import { defaultStartTime, defaultEndTime } from './lib/time';
+import { trackUsage } from './lib/usage-client';
 import type { FetchResult, LookupParams, PriceAnalysis } from './lib/types';
 import { AnalysisPanel } from './components/AnalysisPanel';
 import { BlinkingEyes } from './components/BlinkingEyes';
@@ -38,6 +39,10 @@ export default function App() {
     setApiError(null);
   }, [params]);
 
+  useEffect(() => {
+    trackUsage('page_load');
+  }, []);
+
   const handleFetch = useCallback(async () => {
     const validationError = validateLookup(params);
     if (validationError) return;
@@ -68,6 +73,15 @@ export default function App() {
       params.endTime,
     );
     downloadCsv(csv, filename);
+    trackUsage('csv_download', {
+      symbol: result.normalizedSymbol,
+      startTime: params.startTime,
+      endTime: params.endTime,
+      timezone: params.timezone,
+      aggregation: params.aggregation,
+      rowCount: result.summary.rowCount,
+      csvFilename: filename,
+    });
   };
 
   const hasResults = result !== null && !loading;

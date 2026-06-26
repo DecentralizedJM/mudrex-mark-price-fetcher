@@ -90,10 +90,33 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
-}
+  
+  .animate-in {
+    animation: animate-in 0.3s ease-out;
+  }
+  
+  @keyframes animate-in {
+    from {
+      opacity: 0;
+      transform: scale(0.6) translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
 
-@keyframes search {
-  0% { transform: translateX(-150%) scale(0.8); opacity: 0; }
-  50% { transform: translateX(0) scale(1.2); opacity: 1; }
-  100% { transform: translateX(150%) scale(0.8); opacity: 0; }
+  .blinking-eyes {
+    animation: eye-blink 4s ease-in-out infinite;
+    transform-origin: center center;
+  }
+
+  @keyframes eye-blink {
+    0%, 92%, 100% {
+      transform: scaleY(1);
+    }
+    96% {
+      transform: scaleY(0.12);
+    }
+  }
 }

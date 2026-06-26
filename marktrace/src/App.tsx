@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Download, RefreshCw } from 'lucide-react';
+import { Download, RefreshCw, Table2 } from 'lucide-react';
 import { analyzePriceMovement } from './lib/analysis';
 import { fetchPriceDataViaApi } from './lib/api-client';
 import { validateLookup } from './lib/api';
@@ -7,6 +7,7 @@ import { buildCsv, buildCsvFilename, downloadCsv } from './lib/csv';
 import { defaultStartTime, defaultEndTime } from './lib/time';
 import type { FetchResult, LookupParams, PriceAnalysis } from './lib/types';
 import { AnalysisPanel } from './components/AnalysisPanel';
+import { BlinkingEyes } from './components/BlinkingEyes';
 import { Header } from './components/Header';
 import { LookupForm } from './components/LookupForm';
 import { ResultsTable } from './components/ResultsTable';
@@ -15,7 +16,7 @@ import { Button } from './components/ui/Button';
 import { Card } from './components/ui/Card';
 
 const defaultParams = (): LookupParams => ({
-  symbol: '',
+  symbol: 'BTC/USDT',
   startTime: defaultStartTime('Asia/Kolkata'),
   endTime: defaultEndTime('Asia/Kolkata'),
   timezone: 'Asia/Kolkata',
@@ -77,7 +78,7 @@ export default function App() {
         <Header />
 
         <div className="flex-1 space-y-6">
-          <Card title="Lookup">
+          <Card title="Lookup" icon={<BlinkingEyes />}>
             <LookupForm
               params={params}
               onChange={setParams}
@@ -100,6 +101,7 @@ export default function App() {
 
           <Card
             title="Results"
+            icon={<Table2 size={18} className="text-accent dark:text-accent-dark" />}
             action={
               hasResults ? (
                 <Button variant="secondary" onClick={handleDownload}>

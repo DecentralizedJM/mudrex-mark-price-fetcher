@@ -52,9 +52,14 @@ Set these Railway variables:
 - `ADMIN_EMAIL` — bootstrap admin email
 - `ADMIN_PASSWORD` — bootstrap admin password
 
-The admin dashboard shows summary stats, recent activity (filterable), per-IP breakdown with last used, and failed fetches. Events are kept in memory (last 100000) and reset on redeploy.
+The admin dashboard shows summary stats, recent activity (filterable), per-IP breakdown with last used, and failed fetches. Events are persisted to disk (JSONL, last 100000) and survive process restarts.
 
-Optional: `USAGE_MAX_EVENTS` — max events in memory (default `100000`).
+Optional:
+
+- `USAGE_MAX_EVENTS` — max events retained (default `100000`)
+- `USAGE_EVENTS_FILE` — path to the events file (default `data/usage-events.jsonl`)
+
+On Railway, mount a persistent volume (e.g. at `/data`) and set `USAGE_EVENTS_FILE=/data/usage-events.jsonl` so events survive redeploys.
 
 Local dev: main app at [http://localhost:5173](http://localhost:5173), admin at [http://localhost:5173/admin.html](http://localhost:5173/admin.html) (production serves `/admin`).
 

@@ -1,3 +1,6 @@
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import type {
   IpSummary,
   UsageEvent,
@@ -5,10 +8,73 @@ import type {
   UsageStats,
 } from '../src/lib/usage-types.ts';
 
-const MAX_EVENTS = Number(process.env.USAGE_MAX_EVENTS) || 100000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const events: UsageEvent[] = [];
-let eventCounter = 0;
+const MAX_EVENTS = Number(process.env.USAGE_MAX_EVENTS) || 100000;
+const DEFAULT_EVENTS_FILE =
+  process.env.NODE_ENV === 'production'
+    ? '/data/usage-events.jsonl'
+    : path.join(__dirname, '..', 'data', 'usage-events.jsonl');
+const EVENTS_FILE = process.env.USAGE_EVENTS_FILE || DEFAULT_EVENTS_FILE;
+
+function ensureDataDir(): void {
+  const dir = path.dirname(EVENTS_FILE);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+}
+
+function loadEventsFromDisk(): UsageEvent[] {
+  try {
+    if (!existsSync(EVENTS_FILE)) return [];
+
+    const raw = readFileSync(EVENTS_FILE, 'utf-8');
+    const loaded: UsageEvent[] = [];
+
+    for (const line of raw.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        loaded.push(JSON.parse(trimmed) as UsageEvent);
+      } catch {
+        // skip corrupt lines
+      }
+    }
+
+    // File is append-only (oldest first); memory keeps newest first.
+    return loaded.reverse();
+  } catch (err) {
+    console.warn('Could not load usage events:', err);
+    return [];
+  }
+}
+
+function persistAllEvents(): void {
+  try {
+    ensureDataDir();
+    const lines = [...events].reverse().map((event) => JSON.stringify(event));
+    writeFileSync(EVENTS_FILE, lines.length > 0 ? `${lines.join('\n')}\n` : '', 'utf-8');
+  } catch (err) {
+    console.warn('Failed to persist usage events:', err);
+  }
+}
+
+function appendEventToDisk(event: UsageEvent): void {
+  try {
+    ensureDataDir();
+    appendFileSync(EVENTS_FILE, `${JSON.stringify(event)}\n`, 'utf-8');
+  } catch (err) {
+    console.warn('Failed to append usage event:', err);
+  }
+}
+
+const events: UsageEvent[] = loadEventsFromDisk();
+let eventCounter = events.length;
+
+if (events.length > 0) {
+  console.log(`Loaded ${events.length} usage event(s) from ${EVENTS_FILE}`);
+}
 
 function nextId(): string {
   eventCounter += 1;
@@ -25,6 +91,9 @@ export function recordUsageEvent(input: UsageEventInput): UsageEvent {
   events.unshift(event);
   if (events.length > MAX_EVENTS) {
     events.length = MAX_EVENTS;
+    persistAllEvents();
+  } else {
+    appendEventToDisk(event);
   }
 
   return event;

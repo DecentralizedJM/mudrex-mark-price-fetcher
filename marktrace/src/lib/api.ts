@@ -1,7 +1,6 @@
 import { fetchCandlesChunked } from './api-chunk';
 import {
   normalizeSymbol,
-  validateListedSymbol,
   loadSymbolSuggestions,
   isSymbolListed,
   suggestSimilarSymbols,
@@ -166,11 +165,6 @@ export async function fetchPriceData(params: LookupParams): Promise<FetchResult 
     normalizedSymbol = normalizeSymbol(params.symbol);
   } catch (err) {
     return { message: err instanceof Error ? err.message : 'Invalid symbol format.' };
-  }
-
-  const listedError = await validateListedSymbol(normalizedSymbol);
-  if (listedError) {
-    return { message: listedError };
   }
 
   const { start, end } = localRangeToEpoch(

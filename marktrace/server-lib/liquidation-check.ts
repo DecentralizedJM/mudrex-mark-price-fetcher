@@ -123,10 +123,10 @@ function validatePricesAgainstMarkWindow(input: {
   const ceiling = markHigh * 5;
 
   if (entryPrice < floor || entryPrice > ceiling) {
-    return `Entry price ${formatPrice(entryPrice)} is far from Mudrex mark prices in this window (${formatPrice(markLow)} – ${formatPrice(markHigh)} for ${symbol}). Use the real entry from the position.`;
+    return `Entry price ${formatPrice(entryPrice)} is far from Mudrex mark prices in this window (${formatPrice(markLow)} to ${formatPrice(markHigh)} for ${symbol}). Use the real entry from the position.`;
   }
   if (liquidationPrice < floor || liquidationPrice > ceiling) {
-    return `Liquidation price ${formatPrice(liquidationPrice)} is far from Mudrex mark prices in this window (${formatPrice(markLow)} – ${formatPrice(markHigh)} for ${symbol}). Use the real liquidation price from the position.`;
+    return `Liquidation price ${formatPrice(liquidationPrice)} is far from Mudrex mark prices in this window (${formatPrice(markLow)} to ${formatPrice(markHigh)} for ${symbol}). Use the real liquidation price from the position.`;
   }
   return null;
 }
@@ -173,11 +173,11 @@ function buildAssetSummary(
   return {
     symbol: normalizedSymbol.replace('/', ''),
     name: normalizedSymbol,
-    minLeverage: '—',
-    maxLeverage: '—',
-    minPrice: '—',
-    maxPrice: '—',
-    priceStep: '—',
+        minLeverage: '-',
+        maxLeverage: '-',
+        minPrice: '-',
+        maxPrice: '-',
+        priceStep: '-',
     currentlyListed: false,
   };
 }
@@ -285,7 +285,7 @@ function buildMovementAnalysis(input: {
   ];
 
   if (ltpAtReport !== null) {
-    bullets.push(`Near report time — Mark: ${formatPrice(markAtReport)}, LTP: ${formatPrice(ltpAtReport)}`);
+    bullets.push(`Near report time: Mark ${formatPrice(markAtReport)}, LTP ${formatPrice(ltpAtReport)}`);
   }
 
   const agentReply =

@@ -92,19 +92,19 @@ export function buildCsvFilename(
 }
 
 export function formatPrice(value: number | null | undefined, digits = 6): string {
-  if (value === null || value === undefined) return '—';
+  if (value === null || value === undefined) return '-';
   if (value >= 1000) return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
   if (value >= 1) return value.toFixed(4);
   return value.toFixed(digits);
 }
 
 export function formatPct(value: number | null | undefined): string {
-  if (value === null || value === undefined) return '—';
+  if (value === null || value === undefined) return '-';
   return `${value.toFixed(2)}%`;
 }
 
 export function formatGap(value: number | null | undefined): string {
-  if (value === null || value === undefined) return '—';
+  if (value === null || value === undefined) return '-';
   const sign = value > 0 ? '+' : '';
   return `${sign}${value.toFixed(6)}`;
 }

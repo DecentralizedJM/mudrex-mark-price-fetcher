@@ -240,23 +240,23 @@ export function DashboardPage({ email, onLogout }: DashboardPageProps) {
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{event.ip}</td>
                     <td className="whitespace-nowrap px-3 py-2">{actionLabel(event.action)}</td>
                     <td className="whitespace-nowrap px-3 py-2">{event.status}</td>
-                    <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{event.symbol ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{event.symbol ?? '-'}</td>
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">
                       {event.startTime && event.endTime
                         ? `${event.startTime} → ${event.endTime}`
-                        : '—'}
+                        : '-'}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2">{event.timezone ?? '—'}</td>
-                    <td className="whitespace-nowrap px-3 py-2">{event.aggregation ?? '—'}</td>
-                    <td className="whitespace-nowrap px-3 py-2 tabular-nums">{event.rowCount ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-2">{event.timezone ?? '-'}</td>
+                    <td className="whitespace-nowrap px-3 py-2">{event.aggregation ?? '-'}</td>
+                    <td className="whitespace-nowrap px-3 py-2 tabular-nums">{event.rowCount ?? '-'}</td>
                     <td className="whitespace-nowrap px-3 py-2 tabular-nums">
-                      {event.durationMs != null ? `${event.durationMs}ms` : '—'}
+                      {event.durationMs != null ? `${event.durationMs}ms` : '-'}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 tabular-nums">
-                      {event.maxMarkLtpGapPct != null ? `${event.maxMarkLtpGapPct.toFixed(4)}%` : '—'}
+                      {event.maxMarkLtpGapPct != null ? `${event.maxMarkLtpGapPct.toFixed(4)}%` : '-'}
                     </td>
                     <td className="max-w-[200px] truncate px-3 py-2 text-xs" title={event.errorMessage}>
-                      {event.errorMessage ?? '—'}
+                      {event.errorMessage ?? '-'}
                     </td>
                     <td className="max-w-[240px] truncate px-3 py-2 text-xs" title={event.userAgent}>
                       {event.userAgent}
@@ -324,11 +324,11 @@ export function DashboardPage({ email, onLogout }: DashboardPageProps) {
                     <td className="px-3 py-2 tabular-nums">{row.failedFetches}</td>
                     <td className="px-3 py-2 tabular-nums">{row.rateLimited}</td>
                     <td className="whitespace-nowrap px-3 py-2">{actionLabel(row.lastAction)}</td>
-                    <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{row.lastSymbol ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{row.lastSymbol ?? '-'}</td>
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">
                       {row.lastStartTime && row.lastEndTime
                         ? `${row.lastStartTime} → ${row.lastEndTime}`
-                        : '—'}
+                        : '-'}
                     </td>
                     <td className="max-w-[240px] truncate px-3 py-2 text-xs" title={row.userAgent}>
                       {row.userAgent}
@@ -376,14 +376,14 @@ export function DashboardPage({ email, onLogout }: DashboardPageProps) {
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{event.ip}</td>
                     <td className="whitespace-nowrap px-3 py-2">{actionLabel(event.action)}</td>
                     <td className="whitespace-nowrap px-3 py-2">{event.status}</td>
-                    <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{event.symbol ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">{event.symbol ?? '-'}</td>
                     <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">
                       {event.startTime && event.endTime
                         ? `${event.startTime} → ${event.endTime}`
-                        : '—'}
+                        : '-'}
                     </td>
                     <td className="max-w-[280px] truncate px-3 py-2 text-xs" title={event.errorMessage}>
-                      {event.errorMessage ?? '—'}
+                      {event.errorMessage ?? '-'}
                     </td>
                     <td className="max-w-[240px] truncate px-3 py-2 text-xs" title={event.userAgent}>
                       {event.userAgent}

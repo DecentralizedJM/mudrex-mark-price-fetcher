@@ -38,7 +38,7 @@ export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
           Enter a symbol and time range, then click Fetch prices.
         </p>
         <p className="mt-4 text-xs text-secondary-light dark:text-secondary-dark">
-          Example: ESPORTS/USDT · 18 Jun 2026 · 15:59–16:01 IST
+          Example: ESPORTS/USDT · 18 Jun 2026 · 15:59 to 16:01 IST
         </p>
       </div>
     );

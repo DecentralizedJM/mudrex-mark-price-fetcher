@@ -18,6 +18,6 @@ export function trackUsage(action: TrackAction, metadata?: Partial<CsvTrackMeta>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action, ...metadata }),
   }).catch(() => {
-    // Silent — tracking must not affect the dashboard
+    // Silent: tracking must not affect the dashboard
   });
 }

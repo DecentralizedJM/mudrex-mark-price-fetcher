@@ -143,7 +143,7 @@ export function analyzePriceMovement(
 
   if (severity === 'critical') {
     bullets.push(
-      'Support note: Significant volatility or Mark/LTP divergence detected — cite Mark price timestamps when explaining liquidation triggers.',
+      'Support note: Significant volatility or Mark/LTP divergence detected. Cite Mark price timestamps when explaining liquidation triggers.',
     );
   }
 

@@ -1,3 +1,4 @@
+import { AboutButton } from './AboutButton';
 import { ThemeToggle } from './ThemeToggle';
 import { CandleStream } from './CandleStream';
 
@@ -33,7 +34,10 @@ export function Header() {
           Mudrex LTP &amp; Mark Price Lookup
         </p>
       </div>
-      <ThemeToggle />
+      <div className="flex items-center gap-2 self-end sm:self-start">
+        <AboutButton />
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

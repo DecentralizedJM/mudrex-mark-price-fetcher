@@ -24,17 +24,17 @@ export function SummaryCards({ summary, timezone }: SummaryCardsProps) {
   const ltpRange =
     summary.ltpMinLow !== null && summary.ltpMaxHigh !== null
       ? `${formatPrice(summary.ltpMinLow)} → ${formatPrice(summary.ltpMaxHigh)}`
-      : '—';
+      : '-';
 
   const markRange =
     summary.markMinLow !== null && summary.markMaxHigh !== null
       ? `${formatPrice(summary.markMinLow)} → ${formatPrice(summary.markMaxHigh)}`
-      : '—';
+      : '-';
 
   const maxGap =
     summary.maxMarkLtpGap !== null
       ? `${formatGap(summary.maxMarkLtpGap)} (${formatPct(summary.maxMarkLtpGapPct)})`
-      : '—';
+      : '-';
 
   const maxGapTime =
     summary.maxMarkLtpGapTime !== null

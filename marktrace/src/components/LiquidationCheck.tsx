@@ -356,7 +356,7 @@ export function LiquidationCheck() {
                         Leverage range
                       </dt>
                       <dd className="font-medium text-primary-light dark:text-primary-dark">
-                        {result.asset.minLeverage}x – {result.asset.maxLeverage}x
+                        {result.asset.minLeverage}x to {result.asset.maxLeverage}x
                       </dd>
                     </div>
                     {result.extremeMark !== undefined && result.extremeTime !== undefined && (

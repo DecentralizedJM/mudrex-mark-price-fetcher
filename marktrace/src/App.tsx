@@ -15,6 +15,7 @@ import { LookupForm } from './components/LookupForm';
 import { ResultsTable } from './components/ResultsTable';
 import { SummaryCards } from './components/SummaryCards';
 import { LiquidationCheck } from './components/LiquidationCheck';
+import { LookupPriceChart } from './components/LookupPriceChart';
 import { Button } from './components/ui/Button';
 import { Card } from './components/ui/Card';
 
@@ -172,6 +173,7 @@ export default function App() {
                 {hasResults && result && analysis && (
                   <>
                     <SummaryCards summary={result.summary} timezone={params.timezone} />
+                    <LookupPriceChart rows={result.rows} symbol={result.normalizedSymbol} />
                     <AnalysisPanel analysis={analysis} />
                   </>
                 )}

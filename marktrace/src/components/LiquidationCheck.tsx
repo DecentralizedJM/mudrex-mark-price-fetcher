@@ -1,13 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ShieldAlert, CheckCircle2, Check } from 'lucide-react';
 import { filterSymbols, loadSymbolSuggestions, normalizeSymbol } from '../lib/symbols';
+import { markCandlesToChart } from '../lib/chart-data';
+import { getChartTheme } from '../lib/chart-theme';
+import { parseLocalDateTime } from '../lib/time';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { DateTime24Input } from './ui/DateTime24Input';
+import { PriceChart } from './PriceChart';
 import { formatEpoch, formatEpochForInput } from '../lib/time';
 import { formatPrice } from '../lib/csv';
-import type { TimezoneId } from '../lib/types';
+import type { MarkCandle, TimezoneId } from '../lib/types';
 
 type MovementAnalysis = {
   headline: string;
@@ -24,6 +28,7 @@ type CheckResult = {
   markAtReport?: number;
   markOpen?: number;
   markClose?: number;
+  markCandles?: MarkCandle[];
   analysis?: MovementAnalysis;
   asset?: {
     symbol: string;
@@ -140,6 +145,63 @@ export function LiquidationCheck() {
       });
     }
   };
+
+  const chartCandles = useMemo(
+    () => (result?.markCandles ? markCandlesToChart(result.markCandles) : []),
+    [result?.markCandles],
+  );
+
+  const chartOverlays = useMemo(() => {
+    if (!result?.markCandles?.length) {
+      return { priceLines: [], markers: [] };
+    }
+
+    const theme = getChartTheme();
+    const entry = Number(entryPrice);
+    const liq = Number(liqPrice);
+    const priceLines = [];
+
+    if (Number.isFinite(entry) && entry > 0) {
+      priceLines.push({
+        price: entry,
+        title: 'Entry',
+        color: theme.primary,
+      });
+    }
+    if (Number.isFinite(liq) && liq > 0) {
+      priceLines.push({
+        price: liq,
+        title: 'Liquidation',
+        color: theme.destructive,
+      });
+    }
+
+    const markers = [];
+    try {
+      const reportedEpoch = Math.floor(parseLocalDateTime(liqTime, timezone).getTime() / 1000);
+      markers.push({
+        time: reportedEpoch,
+        text: 'Reported',
+        position: 'aboveBar' as const,
+        color: theme.warning,
+        shape: 'arrowDown' as const,
+      });
+    } catch {
+      // ignore invalid time for marker
+    }
+
+    if (result.extremeTime !== undefined) {
+      markers.push({
+        time: result.extremeTime,
+        text: 'Extreme mark',
+        position: side === 'Long' ? ('belowBar' as const) : ('aboveBar' as const),
+        color: theme.up,
+        shape: 'circle' as const,
+      });
+    }
+
+    return { priceLines, markers };
+  }, [result, entryPrice, liqPrice, liqTime, timezone, side]);
 
   return (
     <div className="space-y-6">
@@ -359,6 +421,18 @@ export function LiquidationCheck() {
               </div>
             </div>
           </div>
+
+          {result.markCandles && result.markCandles.length > 0 && (
+            <PriceChart
+              candles={chartCandles}
+              title="Mark price (±15 min window)"
+              subtitle="1-minute Mudrex mark-kline candles with entry, liquidation, and key times."
+              priceLines={chartOverlays.priceLines}
+              markers={chartOverlays.markers}
+              exportFilename={`liquidation-${symbol.replace('/', '-') || 'chart'}`}
+              className="animate-in"
+            />
+          )}
 
           {result.analysis && (
             <div className="animate-in surface-panel rounded-xl p-5">

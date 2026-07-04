@@ -38,6 +38,8 @@ export interface LiquidationCheckResult {
   markAtReport?: number;
   markOpen?: number;
   markClose?: number;
+  /** Mark klines for the ±15m liquidation window (1m candles). */
+  markCandles?: MarkCandle[];
   analysis?: LiquidationMovementAnalysis;
   asset?: {
     symbol: string;
@@ -507,6 +509,7 @@ export async function runLiquidationCheck(
       markAtReport: reportMark?.[4],
       markOpen,
       markClose,
+      markCandles: typedMarks,
       asset: assetSummary,
       analysis,
       message: `VALID: Mudrex mark price reached ${formatPrice(extremeMark)} at ${timeLabel}, crossing the liquidation threshold of ${formatPrice(liquidationPrice)}.${historicalNote}`,
@@ -520,6 +523,7 @@ export async function runLiquidationCheck(
     markAtReport: reportMark?.[4],
     markOpen,
     markClose,
+    markCandles: typedMarks,
     asset: assetSummary,
     analysis,
     message: `DID NOT REACH: The ${actualDir.toLowerCase()} Mudrex mark price in the window was ${formatPrice(extremeMark)} at ${timeLabel}. It did not ${expectedDir} the liquidation price of ${formatPrice(liquidationPrice)}.${historicalNote}`,

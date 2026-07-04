@@ -3,7 +3,8 @@ import { aggregationToSeconds } from './api-chunk';
 import type { Aggregation, TimezoneId } from './types';
 
 export function parseLocalDateTime(datetimeLocal: string, timezone: TimezoneId): Date {
-  const iso = `${datetimeLocal}:00`;
+  const parts = datetimeLocal.split(':');
+  const iso = parts.length === 2 ? `${datetimeLocal}:00` : datetimeLocal;
   return fromZonedTime(iso, timezone);
 }
 
@@ -25,6 +26,10 @@ export function formatEpoch(epoch: number, timezone: TimezoneId): string {
   const tzLabel = timezone === 'Asia/Kolkata' ? 'IST' : 'UTC';
   const formatted = formatInTimeZone(epoch * 1000, timezone, 'yyyy-MM-dd HH:mm:ss');
   return `${formatted} ${tzLabel}`;
+}
+
+export function formatEpochForInput(epoch: number, timezone: TimezoneId): string {
+  return formatInTimeZone(epoch * 1000, timezone, "yyyy-MM-dd'T'HH:mm:ss");
 }
 
 export function defaultStartTime(timezone: TimezoneId): string {

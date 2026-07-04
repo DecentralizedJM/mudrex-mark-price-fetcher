@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Download, RefreshCw, Table2 } from 'lucide-react';
+import { Download, RefreshCw, Table2, Target } from 'lucide-react';
 import { analyzePriceMovement } from './lib/analysis';
 import { fetchPriceDataViaApi } from './lib/api-client';
 import { validateLookup } from './lib/api';
@@ -13,6 +13,7 @@ import { Header } from './components/Header';
 import { LookupForm } from './components/LookupForm';
 import { ResultsTable } from './components/ResultsTable';
 import { SummaryCards } from './components/SummaryCards';
+import { LiquidationCheck } from './components/LiquidationCheck';
 import { Button } from './components/ui/Button';
 import { Card } from './components/ui/Card';
 
@@ -28,7 +29,10 @@ function isFetchError(value: unknown): value is { message: string; retryable: bo
   return typeof value === 'object' && value !== null && 'message' in value && !('rows' in value);
 }
 
+type ToolSection = 'lookup' | 'liquidation';
+
 export default function App() {
+  const [section, setSection] = useState<ToolSection>('lookup');
   const [params, setParams] = useState<LookupParams>(defaultParams);
   const [result, setResult] = useState<FetchResult | null>(null);
   const [analysis, setAnalysis] = useState<PriceAnalysis | null>(null);
@@ -92,51 +96,99 @@ export default function App() {
         <Header />
 
         <div className="flex-1 space-y-6">
-          <Card title="Lookup" icon={<BlinkingEyes />}>
-            <LookupForm
-              params={params}
-              onChange={setParams}
-              onSubmit={handleFetch}
-              loading={loading}
-            />
-          </Card>
+          <div
+            role="tablist"
+            aria-label="Tool"
+            className="grid grid-cols-2 gap-1 rounded-xl border border-border-light bg-card-light p-1 dark:border-border-dark dark:bg-card-dark"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={section === 'lookup'}
+              onClick={() => setSection('lookup')}
+              className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                section === 'lookup'
+                  ? 'bg-accent text-white shadow-sm dark:bg-accent-dark'
+                  : 'text-secondary-light hover:bg-neutral-50 hover:text-primary-light dark:text-secondary-dark dark:hover:bg-neutral-900 dark:hover:text-primary-dark'
+              }`}
+            >
+              <BlinkingEyes />
+              Lookup
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={section === 'liquidation'}
+              onClick={() => setSection('liquidation')}
+              className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                section === 'liquidation'
+                  ? 'bg-red-600 text-white shadow-sm dark:bg-red-600'
+                  : 'text-secondary-light hover:bg-red-50 hover:text-red-700 dark:text-secondary-dark dark:hover:bg-red-950/40 dark:hover:text-red-300'
+              }`}
+            >
+              <Target size={18} className={section === 'liquidation' ? 'text-white' : 'text-red-500'} />
+              Liquidation Check
+            </button>
+          </div>
 
-          {apiError && (
-            <div className="flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900/50 dark:bg-red-950/30 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-red-800 dark:text-red-200">{apiError.message}</p>
-              {apiError.retryable && (
-                <Button variant="secondary" onClick={handleFetch} disabled={loading}>
-                  <RefreshCw size={16} />
-                  Retry
-                </Button>
+          {section === 'lookup' && (
+            <>
+              <Card title="Lookup" icon={<BlinkingEyes />}>
+                <LookupForm
+                  params={params}
+                  onChange={setParams}
+                  onSubmit={handleFetch}
+                  loading={loading}
+                />
+              </Card>
+
+              {apiError && (
+                <div className="flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900/50 dark:bg-red-950/30 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-red-800 dark:text-red-200">{apiError.message}</p>
+                  {apiError.retryable && (
+                    <Button variant="secondary" onClick={handleFetch} disabled={loading}>
+                      <RefreshCw size={16} />
+                      Retry
+                    </Button>
+                  )}
+                </div>
               )}
-            </div>
+
+              <Card
+                title="Results"
+                icon={<Table2 size={18} className="text-accent dark:text-accent-dark" />}
+                action={
+                  hasResults ? (
+                    <Button variant="secondary" onClick={handleDownload}>
+                      <Download size={16} />
+                      Download CSV
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {hasResults && result && analysis && (
+                  <>
+                    <SummaryCards summary={result.summary} timezone={params.timezone} />
+                    <AnalysisPanel analysis={analysis} />
+                  </>
+                )}
+                <ResultsTable
+                  rows={result?.rows ?? []}
+                  timezone={params.timezone}
+                  loading={loading}
+                />
+              </Card>
+            </>
           )}
 
-          <Card
-            title="Results"
-            icon={<Table2 size={18} className="text-accent dark:text-accent-dark" />}
-            action={
-              hasResults ? (
-                <Button variant="secondary" onClick={handleDownload}>
-                  <Download size={16} />
-                  Download CSV
-                </Button>
-              ) : undefined
-            }
-          >
-            {hasResults && result && analysis && (
-              <>
-                <SummaryCards summary={result.summary} timezone={params.timezone} />
-                <AnalysisPanel analysis={analysis} />
-              </>
-            )}
-            <ResultsTable
-              rows={result?.rows ?? []}
-              timezone={params.timezone}
-              loading={loading}
-            />
-          </Card>
+          {section === 'liquidation' && (
+            <Card
+              title="Liquidation Check"
+              icon={<Target size={18} className="text-red-500" />}
+            >
+              <LiquidationCheck />
+            </Card>
+          )}
         </div>
 
         <footer className="mt-auto border-t border-border-light pt-6 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary-light dark:border-border-dark dark:text-secondary-dark">

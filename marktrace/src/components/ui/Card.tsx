@@ -11,7 +11,7 @@ interface CardProps {
 export function Card({ title, icon, action, children, className = '' }: CardProps) {
   return (
     <section
-      className={`rounded-xl border border-border-light bg-card-light shadow-card dark:border-border-dark dark:bg-card-dark dark:shadow-none ${className}`}
+      className={`flex flex-col rounded-xl border border-border-light bg-card-light shadow-card dark:border-border-dark dark:bg-card-dark dark:shadow-none ${className}`}
     >
       {(title || action) && (
         <div className="flex items-center justify-between border-b border-border-light px-5 py-4 dark:border-border-dark">
@@ -24,7 +24,7 @@ export function Card({ title, icon, action, children, className = '' }: CardProp
           {action}
         </div>
       )}
-      <div className="p-5">{children}</div>
+      <div className="flex-1 p-5">{children}</div>
     </section>
   );
 }

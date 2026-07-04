@@ -41,6 +41,19 @@ Optional rate limits (set in Railway variables):
 - `RATE_LIMIT_MAX` — default `120` requests per IP
 - `RATE_LIMIT_API_MAX` — default `30` price fetches per IP
 
+### Liquidation Check (Mudrex source of truth)
+
+The **Liquidation Check** tab validates agent-entered side, leverage, entry, liquidation price, and time against Mudrex:
+
+1. **Asset specs** — `GET /fapi/v1/futures/{symbol}?is_symbol` (min/max leverage, price bounds, price step)
+2. **Mark reach** — public `mark-kline` around the reported time (±15 minutes, 1m candles)
+
+Requires a server-side Mudrex API secret:
+
+- `MUDREX_API_KEY` — trading API secret (`X-Authentication` header). Used only on the server; never exposed to the browser.
+
+If the asset is no longer listed but historical mark data exists, the check still runs and labels the verdict as historical-only.
+
 ### Admin usage dashboard
 
 The public dashboard has **no login**. Usage is tracked silently (page loads, price fetches, CSV downloads, rate limits).

@@ -22,6 +22,10 @@ import {
   getUsageStats,
   recordUsageEvent,
 } from './server-lib/usage-tracker.ts';
+import {
+  runLiquidationCheck,
+  type LiquidationCheckInput,
+} from './server-lib/liquidation-check.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -111,6 +115,34 @@ app.post('/api/usage/track', (req, res) => {
   });
 
   res.json({ ok: true });
+});
+
+app.post('/api/liquidation/check', apiLimiter, async (req, res) => {
+  const started = Date.now();
+  const meta = getRequestMeta(req);
+  const body = req.body as LiquidationCheckInput;
+  const result = await runLiquidationCheck(body);
+  const durationMs = Date.now() - started;
+
+  recordUsageEvent({
+    ...meta,
+    action: 'price_fetch',
+    status: result.kind === 'error' ? 'validation_error' : 'success',
+    symbol: typeof body.symbol === 'string' ? body.symbol : undefined,
+    startTime: typeof body.liquidationTime === 'string' ? body.liquidationTime : undefined,
+    endTime: typeof body.liquidationTime === 'string' ? body.liquidationTime : undefined,
+    timezone: typeof body.timezone === 'string' ? body.timezone : undefined,
+    aggregation: '1m',
+    durationMs,
+    errorMessage: result.kind === 'error' ? result.message : undefined,
+  });
+
+  if (result.kind === 'error') {
+    res.status(400).json(result);
+    return;
+  }
+
+  res.json(result);
 });
 
 app.post('/api/prices', apiLimiter, async (req, res) => {

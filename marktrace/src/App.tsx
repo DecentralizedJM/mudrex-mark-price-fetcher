@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Download, RefreshCw, Table2, Target } from 'lucide-react';
+import { Download, RefreshCw, Table2 } from 'lucide-react';
 import { analyzePriceMovement } from './lib/analysis';
 import { fetchPriceDataViaApi } from './lib/api-client';
 import { validateLookup } from './lib/api';
@@ -10,6 +10,7 @@ import type { FetchResult, LookupParams, PriceAnalysis } from './lib/types';
 import { AnalysisPanel } from './components/AnalysisPanel';
 import { BlinkingEyes } from './components/BlinkingEyes';
 import { Header } from './components/Header';
+import { LiquidationArrow } from './components/LiquidationArrow';
 import { LookupForm } from './components/LookupForm';
 import { ResultsTable } from './components/ResultsTable';
 import { SummaryCards } from './components/SummaryCards';
@@ -126,7 +127,9 @@ export default function App() {
                   : 'text-secondary-light hover:bg-red-50 hover:text-red-700 dark:text-secondary-dark dark:hover:bg-red-950/40 dark:hover:text-red-300'
               }`}
             >
-              <Target size={18} className={section === 'liquidation' ? 'text-white' : 'text-red-500'} />
+              <LiquidationArrow
+                className={section === 'liquidation' ? '!text-white' : ''}
+              />
               Liquidation Check
             </button>
           </div>
@@ -184,7 +187,7 @@ export default function App() {
           {section === 'liquidation' && (
             <Card
               title="Liquidation Check"
-              icon={<Target size={18} className="text-red-500" />}
+              icon={<LiquidationArrow />}
             >
               <LiquidationCheck />
             </Card>

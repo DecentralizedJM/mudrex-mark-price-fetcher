@@ -40,9 +40,9 @@ export function analyzePriceMovement(
   const rows = result.rows;
   const { summary, normalizedSymbol } = result;
 
-  const firstLtp = rows.find((r) => r.ltp)?.ltp?.close;
+  const firstLtp = rows.find((r) => r.ltp)?.ltp?.open;
   const lastLtp = [...rows].reverse().find((r) => r.ltp)?.ltp?.close;
-  const firstMark = rows.find((r) => r.mark)?.mark?.close;
+  const firstMark = rows.find((r) => r.mark)?.mark?.open;
   const lastMark = [...rows].reverse().find((r) => r.mark)?.mark?.close;
 
   const ltpMovePct =

@@ -157,12 +157,12 @@ export function LiquidationCheck() {
               required
             />
             {showSuggestions && filtered.length > 0 && (
-              <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-border-light bg-white shadow-lg dark:border-border-dark dark:bg-card-dark">
+              <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-border bg-card shadow-panel">
                 {filtered.map((s) => (
                   <li key={s}>
                     <button
                       type="button"
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted"
                       onMouseDown={() => {
                         setSymbol(s);
                         setShowSuggestions(false);
@@ -251,12 +251,12 @@ export function LiquidationCheck() {
         </div>
 
         {clientError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+          <div className="alert-destructive rounded-lg px-4 py-3 text-sm">
             {clientError}
           </div>
         )}
 
-        <p className="text-xs text-secondary-light dark:text-secondary-dark">
+        <p className="text-xs text-muted-foreground">
           Symbol, leverage, and price limits are validated against Mudrex futures asset specs. Mark
           price reach is verified from Mudrex mark-kline data.
         </p>
@@ -271,15 +271,15 @@ export function LiquidationCheck() {
       {status === 'checking' && (
         <div className="flex flex-col items-center justify-center space-y-4 py-10 animate-in">
           <div className="relative flex h-16 w-16 items-center justify-center">
-            <Activity className="h-10 w-10 animate-pulse text-accent" />
-            <div className="absolute inset-0 animate-spin rounded-full border-4 border-accent/20 border-t-accent" />
+            <Activity className="h-10 w-10 animate-pulse text-primary" />
+            <div className="absolute inset-0 animate-spin rounded-full border-4 border-primary-ring border-t-primary" />
           </div>
-          <p className="text-center text-sm font-medium text-secondary-light dark:text-secondary-dark">
+          <p className="text-center text-sm font-medium text-muted-foreground">
             Checking Mudrex asset specs and mark price around {liqTime.replace('T', ' ')}…
           </p>
-          <div className="h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-border-light dark:bg-border-dark">
+          <div className="h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-border">
             <div
-              className="h-full bg-accent transition-all duration-300 ease-out"
+              className="h-full bg-primary transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -291,36 +291,28 @@ export function LiquidationCheck() {
           <div
             className={`animate-in rounded-xl border p-6 ${
               result.kind === 'hit'
-                ? 'border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-950/20'
+                ? 'alert-destructive'
                 : result.kind === 'miss'
-                  ? 'border-green-200 bg-green-50 dark:border-green-900/30 dark:bg-green-950/20'
-                  : 'border-amber-200 bg-amber-50 dark:border-amber-900/30 dark:bg-amber-950/20'
+                  ? 'alert-success'
+                  : 'alert-warning'
             }`}
           >
             <div className="flex items-start gap-4">
               <div className="mt-1 shrink-0">
                 {result.kind === 'hit' ? (
-                  <ShieldAlert className="h-8 w-8 text-red-600 dark:text-red-500" />
+                  <ShieldAlert className="h-8 w-8 text-destructive" />
                 ) : result.kind === 'miss' ? (
-                  <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-500" />
+                  <CheckCircle2 className="h-8 w-8 text-success" />
                 ) : (
-                  <ShieldAlert className="h-8 w-8 text-amber-600 dark:text-amber-500" />
+                  <ShieldAlert className="h-8 w-8 text-warning" />
                 )}
               </div>
               <div className="min-w-0 flex-1 space-y-3">
-                <h3
-                  className={`flex items-center gap-2 text-lg font-semibold ${
-                    result.kind === 'hit'
-                      ? 'text-red-900 dark:text-red-300'
-                      : result.kind === 'miss'
-                        ? 'text-green-900 dark:text-green-300'
-                        : 'text-amber-900 dark:text-amber-300'
-                  }`}
-                >
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                   {result.kind === 'hit' ? (
                     <>
                       VERDICT: VALID LIQUIDATION
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-white dark:bg-green-500">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-success text-primary-foreground">
                         <Check size={14} strokeWidth={3} aria-hidden />
                       </span>
                     </>
@@ -330,41 +322,33 @@ export function LiquidationCheck() {
                     'CHECK REJECTED'
                   )}
                 </h3>
-                <p
-                  className={`text-sm leading-relaxed ${
-                    result.kind === 'hit'
-                      ? 'text-red-800 dark:text-red-200'
-                      : result.kind === 'miss'
-                        ? 'text-green-800 dark:text-green-200'
-                        : 'text-amber-800 dark:text-amber-200'
-                  }`}
-                >
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   {result.message}
                 </p>
 
                 {result.asset && (
                   <dl className="grid gap-2 text-xs sm:grid-cols-2">
                     <div>
-                      <dt className="text-secondary-light dark:text-secondary-dark">Mudrex asset</dt>
-                      <dd className="font-medium text-primary-light dark:text-primary-dark">
+                      <dt className="text-muted-foreground">Mudrex asset</dt>
+                      <dd className="font-medium text-foreground">
                         {result.asset.name} ({result.asset.symbol})
                         {!result.asset.currentlyListed ? ' · historical only' : ''}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-secondary-light dark:text-secondary-dark">
+                      <dt className="text-muted-foreground">
                         Leverage range
                       </dt>
-                      <dd className="font-medium text-primary-light dark:text-primary-dark">
+                      <dd className="font-medium text-foreground">
                         {result.asset.minLeverage}x to {result.asset.maxLeverage}x
                       </dd>
                     </div>
                     {result.extremeMark !== undefined && result.extremeTime !== undefined && (
                       <div className="sm:col-span-2">
-                        <dt className="text-secondary-light dark:text-secondary-dark">
+                        <dt className="text-muted-foreground">
                           Extreme mark in window
                         </dt>
-                        <dd className="font-medium text-primary-light dark:text-primary-dark">
+                        <dd className="font-medium text-foreground">
                           {formatPrice(result.extremeMark)} at{' '}
                           {formatEpoch(result.extremeTime, timezone)}
                         </dd>
@@ -377,12 +361,12 @@ export function LiquidationCheck() {
           </div>
 
           {result.analysis && (
-            <div className="animate-in rounded-xl border border-border-light bg-card-light p-5 dark:border-border-dark dark:bg-card-dark">
+            <div className="animate-in surface-panel rounded-xl p-5">
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-primary-light dark:text-primary-dark">
+                <h3 className="text-sm font-semibold text-foreground">
                   Price movement analysis
                 </h3>
-                <p className="mt-1 text-sm leading-relaxed text-secondary-light dark:text-secondary-dark">
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                   {result.analysis.headline}
                 </p>
               </div>
@@ -391,13 +375,13 @@ export function LiquidationCheck() {
                 {result.analysis.paragraphs.map((paragraph, i) => (
                   <p
                     key={i}
-                    className="text-sm leading-relaxed text-secondary-light dark:text-secondary-dark"
+                    className="text-sm leading-relaxed text-muted-foreground"
                   >
                     {paragraph}
                   </p>
                 ))}
                 {result.analysis.bullets.length > 0 && (
-                  <ul className="list-disc space-y-1 pl-5 text-sm text-secondary-light dark:text-secondary-dark">
+                  <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                     {result.analysis.bullets.map((bullet, i) => (
                       <li key={i}>{bullet}</li>
                     ))}
@@ -405,11 +389,11 @@ export function LiquidationCheck() {
                 )}
               </div>
 
-              <div className="mt-5 rounded-lg border border-border-light bg-neutral-50/80 p-4 dark:border-border-dark dark:bg-neutral-900/40">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-secondary-light dark:text-secondary-dark">
+              <div className="mt-5 rounded-lg border border-border bg-muted/50 p-4">
+                <h4 className="meta-label">
                   Suggested user reply
                 </h4>
-                <p className="mt-2 select-text text-sm leading-relaxed text-primary-light dark:text-primary-dark">
+                <p className="mt-2 select-text text-sm leading-relaxed text-foreground">
                   {result.analysis.agentReply}
                 </p>
               </div>

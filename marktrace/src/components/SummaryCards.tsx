@@ -9,11 +9,9 @@ interface SummaryCardsProps {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border-light bg-neutral-50/80 px-4 py-3 dark:border-border-dark dark:bg-neutral-900/50">
-      <p className="text-xs font-medium uppercase tracking-wide text-secondary-light dark:text-secondary-dark">
-        {label}
-      </p>
-      <p className="mt-1 font-mono text-sm font-semibold tabular-nums text-primary-light dark:text-primary-dark">
+    <div className="rounded-lg border border-border bg-muted/50 px-4 py-3">
+      <p className="meta-label">{label}</p>
+      <p className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
         {value}
       </p>
     </div>

@@ -4,11 +4,19 @@ export type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'marktrace-theme';
 
+export function initTheme() {
+  if (typeof window === 'undefined') return;
+  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+  const theme: Theme =
+    stored === 'light' || stored === 'dark' ? stored : 'dark';
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+}
+
 function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
   const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
   if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return 'dark';
 }
 
 export function useTheme() {

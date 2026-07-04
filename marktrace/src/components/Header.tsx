@@ -4,11 +4,12 @@ import { CandleStream } from './CandleStream';
 
 export function Header() {
   return (
-    <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div className="shrink-0">
-        <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/70 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6 lg:px-8">
+        <div className="shrink-0">
+          <div className="flex items-center gap-2">
           <svg
-            className="h-6 w-6 shrink-0 text-accent dark:text-accent-dark"
+            className="h-6 w-6 shrink-0 text-primary"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -25,18 +26,19 @@ export function Header() {
             <path d="M17 13v6" />
             <path d="M3 3v18h18" />
           </svg>
-          <h1 className="text-2xl font-semibold tracking-tight text-primary-light dark:text-primary-dark">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
             PriceFetcher
           </h1>
           <CandleStream />
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Mudrex LTP &amp; Mark Price Lookup
+          </p>
         </div>
-        <p className="mt-1 text-sm text-secondary-light dark:text-secondary-dark">
-          Mudrex LTP &amp; Mark Price Lookup
-        </p>
-      </div>
-      <div className="flex items-center gap-2 self-end sm:self-start">
-        <AboutButton />
-        <ThemeToggle />
+        <div className="flex items-center gap-2 self-end sm:self-start">
+          <AboutButton />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

@@ -19,10 +19,7 @@ export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
     return (
       <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-10 animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800"
-          />
+          <div key={i} className="h-10 animate-pulse rounded-lg bg-muted" />
         ))}
       </div>
     );
@@ -30,14 +27,12 @@ export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-border-light px-6 py-12 text-center dark:border-border-dark">
-        <p className="text-sm font-medium text-primary-light dark:text-primary-dark">
-          No results yet
-        </p>
-        <p className="mt-2 text-sm text-secondary-light dark:text-secondary-dark">
+      <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
+        <p className="text-sm font-medium text-foreground">No results yet</p>
+        <p className="mt-2 text-sm text-muted-foreground">
           Enter a symbol and time range, then click Fetch prices.
         </p>
-        <p className="mt-4 text-xs text-secondary-light dark:text-secondary-dark">
+        <p className="mt-4 text-xs text-muted-foreground">
           Example: ESPORTS/USDT · 18 Jun 2026 · 15:59 to 16:01 IST
         </p>
       </div>
@@ -58,18 +53,21 @@ export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
     'Mark−LTP',
   ];
 
+  const stickyHead =
+    'sticky left-0 z-20 border-r border-border bg-muted shadow-[4px_0_8px_-4px_oklch(0_0_0/8%)] dark:shadow-[4px_0_8px_-4px_oklch(0_0_0/45%)]';
+  const stickyBody =
+    'sticky left-0 z-10 border-r border-border bg-card px-3 py-2.5 font-mono text-xs tabular-nums shadow-[4px_0_8px_-4px_oklch(0_0_0/8%)] group-hover:bg-muted/50 dark:shadow-[4px_0_8px_-4px_oklch(0_0_0/45%)]';
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-border-light dark:border-border-dark">
+    <div className="overflow-x-auto rounded-lg border border-border">
       <table className="min-w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-border-light bg-neutral-50 dark:border-border-dark dark:bg-neutral-900">
+          <tr className="border-b border-border bg-muted">
             {headers.map((h) => (
               <th
                 key={h}
-                className={`whitespace-nowrap px-3 py-3 text-xs font-semibold uppercase tracking-wide text-secondary-light dark:text-secondary-dark ${
-                  h === 'Time'
-                    ? 'sticky left-0 z-20 border-r border-border-light bg-neutral-50 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)] dark:border-border-dark dark:bg-neutral-900 dark:shadow-[4px_0_8px_-4px_rgba(0,0,0,0.45)]'
-                    : ''
+                className={`meta-label whitespace-nowrap px-3 py-3 ${
+                  h === 'Time' ? stickyHead : ''
                 }`}
               >
                 {h}
@@ -86,9 +84,9 @@ export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
             return (
               <tr
                 key={row.openTime}
-                className="group border-b border-border-light bg-white transition-colors hover:bg-neutral-50 dark:border-border-dark dark:bg-card-dark dark:hover:bg-neutral-900/50"
+                className="group border-b border-border bg-card transition-colors hover:bg-muted/50"
               >
-                <td className="sticky left-0 z-10 whitespace-nowrap border-r border-border-light bg-white px-3 py-2.5 font-mono text-xs tabular-nums shadow-[4px_0_8px_-4px_rgba(0,0,0,0.08)] group-hover:bg-neutral-50 dark:border-border-dark dark:bg-card-dark dark:shadow-[4px_0_8px_-4px_rgba(0,0,0,0.45)] dark:group-hover:bg-neutral-900/50">
+                <td className={`whitespace-nowrap ${stickyBody}`}>
                   <div className="flex items-center gap-2">
                     <span>{formatEpoch(row.openTime, timezone)}</span>
                   </div>
@@ -105,7 +103,7 @@ export function ResultsTable({ rows, timezone, loading }: ResultsTableProps) {
                 <td
                   className={`px-3 py-2.5 font-mono tabular-nums ${
                     highlightGap
-                      ? 'font-semibold text-warning dark:text-amber-400'
+                      ? 'font-semibold text-warning'
                       : gap !== null && gap > 0
                         ? 'text-success'
                         : ''

@@ -40,13 +40,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-page-light px-4 dark:bg-page-dark">
-      <div className="w-full max-w-md rounded-xl border border-border-light bg-card-light p-8 shadow-card dark:border-border-dark dark:bg-card-dark">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="surface-panel w-full max-w-md rounded-xl p-8">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold text-primary-light dark:text-primary-dark">
+          <h1 className="text-2xl font-semibold text-foreground">
             PriceFetcher Admin
           </h1>
-          <p className="mt-2 text-sm text-secondary-light dark:text-secondary-dark">
+          <p className="mt-2 text-sm text-muted-foreground">
             Usage analytics dashboard
           </p>
         </div>
@@ -70,7 +70,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           />
 
           {error && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+            <p className="alert-destructive rounded-lg px-3 py-2 text-sm">
               {error}
             </p>
           )}

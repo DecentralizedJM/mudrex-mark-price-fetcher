@@ -18,8 +18,8 @@ export function AdminApp() {
 
   if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-page-light dark:bg-page-dark">
-        <p className="text-sm text-secondary-light dark:text-secondary-dark">Loading…</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Loading…</p>
       </div>
     );
   }

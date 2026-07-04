@@ -1,8 +1,46 @@
+@import '@fontsource/work-sans/400.css';
+@import '@fontsource/work-sans/500.css';
+@import '@fontsource/work-sans/600.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+@import '@fontsource/jetbrains-mono/700.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: oklch(0.97 0.012 275);
+    --foreground: oklch(0.2 0.04 275);
+    --muted: oklch(0.94 0.02 275);
+    --muted-foreground: oklch(0.5 0.03 265);
+    --card: oklch(0.99 0.01 275);
+    --card-elevated: oklch(0.95 0.025 275);
+    --border: oklch(0 0 0 / 10%);
+    --border-strong: oklch(0 0 0 / 16%);
+    --input: oklch(0.98 0.01 275);
+    --ring: oklch(0.5 0.22 275);
+    --color-primary: oklch(0.5 0.22 275);
+    --color-primary-glow: oklch(0.45 0.2 275);
+    --primary-foreground: oklch(0.98 0.01 265);
+    --destructive: oklch(0.55 0.24 25);
+    --destructive-subtle: color-mix(in oklch, var(--destructive) 10%, transparent);
+    --destructive-border: color-mix(in oklch, var(--destructive) 30%, transparent);
+    --success: oklch(0.55 0.19 155);
+    --success-subtle: color-mix(in oklch, var(--success) 10%, transparent);
+    --success-border: color-mix(in oklch, var(--success) 30%, transparent);
+    --warning: oklch(0.65 0.16 75);
+    --warning-subtle: color-mix(in oklch, var(--warning) 10%, transparent);
+    --warning-border: color-mix(in oklch, var(--warning) 30%, transparent);
+    --primary-subtle: color-mix(in oklch, var(--color-primary) 15%, transparent);
+    --primary-border: color-mix(in oklch, var(--color-primary) 60%, transparent);
+    --primary-ring: color-mix(in oklch, var(--color-primary) 20%, transparent);
+    --overlay: oklch(0.1 0.04 275 / 55%);
+    --radius: 0.375rem;
+  }
+
   html {
     @apply antialiased;
     color-scheme: light;
@@ -10,14 +48,60 @@
 
   html.dark {
     color-scheme: dark;
+    --background: oklch(0.15 0.04 275);
+    --foreground: oklch(0.96 0.01 265);
+    --muted: oklch(0.23 0.05 273);
+    --muted-foreground: oklch(0.7 0.03 265);
+    --card: oklch(0.19 0.045 275);
+    --card-elevated: oklch(0.23 0.05 273);
+    --border: oklch(1 0 0 / 8%);
+    --border-strong: oklch(1 0 0 / 14%);
+    --input: oklch(0.22 0.05 275);
+    --ring: oklch(0.62 0.22 275);
+    --color-primary: oklch(0.62 0.22 275);
+    --color-primary-glow: oklch(0.72 0.2 275);
+    --primary-foreground: oklch(0.96 0.01 265);
+    --destructive: oklch(0.62 0.24 25);
+    --destructive-subtle: color-mix(in oklch, var(--destructive) 10%, transparent);
+    --destructive-border: color-mix(in oklch, var(--destructive) 30%, transparent);
+    --success: oklch(0.72 0.19 155);
+    --success-subtle: color-mix(in oklch, var(--success) 10%, transparent);
+    --success-border: color-mix(in oklch, var(--success) 30%, transparent);
+    --warning: oklch(0.78 0.16 75);
+    --warning-subtle: color-mix(in oklch, var(--warning) 10%, transparent);
+    --warning-border: color-mix(in oklch, var(--warning) 30%, transparent);
+    --primary-subtle: color-mix(in oklch, var(--color-primary) 15%, transparent);
+    --primary-border: color-mix(in oklch, var(--color-primary) 60%, transparent);
+    --primary-ring: color-mix(in oklch, var(--color-primary) 20%, transparent);
+    --overlay: oklch(0.05 0.03 275 / 60%);
   }
 
   body {
-    @apply bg-page-light text-primary-light transition-colors duration-theme dark:bg-page-dark dark:text-primary-dark;
+    @apply bg-background text-foreground transition-colors duration-theme;
+    font-family: 'Work Sans', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  html.dark body {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, oklch(0.4 0.18 275 / 25%), transparent 60%),
+      radial-gradient(ellipse 700px 400px at 100% 100%, oklch(0.5 0.22 285 / 18%), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: -0.02em;
   }
 
   * {
-    @apply border-border-light dark:border-border-dark;
+    @apply border-border;
   }
 
   input[type='date'],
@@ -34,6 +118,34 @@
 }
 
 @layer components {
+  .surface-panel {
+    background: linear-gradient(180deg, var(--card-elevated), var(--card));
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 40px -12px oklch(0 0 0 / 60%);
+  }
+
+  html:not(.dark) .surface-panel {
+    box-shadow: 0 1px 3px 0 oklch(0 0 0 / 8%), 0 1px 2px -1px oklch(0 0 0 / 4%);
+  }
+
+  .alert-destructive {
+    border: 1px solid var(--destructive-border);
+    background-color: var(--destructive-subtle);
+    color: var(--destructive);
+  }
+
+  .alert-success {
+    border: 1px solid var(--success-border);
+    background-color: var(--success-subtle);
+    color: var(--success);
+  }
+
+  .alert-warning {
+    border: 1px solid var(--warning-border);
+    background-color: var(--warning-subtle);
+    color: var(--warning);
+  }
+
   .datetime-input::-webkit-calendar-picker-indicator {
     cursor: pointer;
     width: 1.125rem;
@@ -46,7 +158,7 @@
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23525252' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
   }
 
   .datetime-input:hover::-webkit-calendar-picker-indicator {
@@ -56,12 +168,12 @@
   html.dark .datetime-input::-webkit-calendar-picker-indicator {
     opacity: 0.9;
     filter: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23E5E7EB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b8bcc8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
   }
 
   html.dark .datetime-input:hover::-webkit-calendar-picker-indicator {
     opacity: 1;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
   }
 
   .datetime-input::-webkit-datetime-edit-fields-wrapper {
@@ -82,19 +194,33 @@
   html.dark .datetime-input::-webkit-datetime-edit-minute-field,
   html.dark .datetime-input::-webkit-datetime-edit-second-field,
   html.dark .datetime-input::-webkit-datetime-edit-ampm-field {
-    color: #f0f0f0;
+    color: var(--foreground);
   }
 }
 
 @layer utilities {
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
-  
+
+  .font-display {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: -0.02em;
+  }
+
+  .meta-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    @apply text-muted-foreground;
+  }
+
   .animate-in {
     animation: animate-in 0.3s ease-out;
   }
-  
+
   @keyframes animate-in {
     from {
       opacity: 0;
@@ -123,7 +249,7 @@
   .liquidation-arrow {
     animation: liq-lightning-strike 1.2s ease-in infinite;
     transform-origin: center top;
-    color: #ef4444;
+    color: var(--destructive);
   }
 
   @keyframes liq-lightning-strike {

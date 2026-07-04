@@ -10,13 +10,11 @@ interface CardProps {
 
 export function Card({ title, icon, action, children, className = '' }: CardProps) {
   return (
-    <section
-      className={`flex flex-col rounded-xl border border-border-light bg-card-light shadow-card dark:border-border-dark dark:bg-card-dark dark:shadow-none ${className}`}
-    >
+    <section className={`surface-panel flex flex-col rounded-xl ${className}`}>
       {(title || action) && (
-        <div className="flex items-center justify-between border-b border-border-light px-5 py-4 dark:border-border-dark">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
           {title && (
-            <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-primary-light dark:text-primary-dark">
+            <h2 className="font-display flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
               {icon}
               {title}
             </h2>

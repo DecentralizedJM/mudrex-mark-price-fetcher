@@ -92,15 +92,15 @@ export default function App() {
   const hasResults = result !== null && !loading;
 
   return (
-    <div className="flex min-h-screen flex-col bg-page-light transition-colors duration-theme dark:bg-page-dark">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6 lg:px-8">
-        <Header />
+    <div className="flex h-dvh flex-col bg-background transition-colors duration-theme">
+      <Header />
 
-        <div className="flex-1 space-y-6">
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
           <div
             role="tablist"
             aria-label="Tool"
-            className="grid grid-cols-2 gap-1 rounded-xl border border-border-light bg-card-light p-1 dark:border-border-dark dark:bg-card-dark"
+            className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1"
           >
             <button
               type="button"
@@ -109,8 +109,8 @@ export default function App() {
               onClick={() => setSection('lookup')}
               className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                 section === 'lookup'
-                  ? 'bg-accent text-white shadow-sm dark:bg-accent-dark'
-                  : 'text-secondary-light hover:bg-neutral-50 hover:text-primary-light dark:text-secondary-dark dark:hover:bg-neutral-900 dark:hover:text-primary-dark'
+                  ? 'border border-primary-border bg-primary-subtle text-primary'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               <BlinkingEyes />
@@ -123,12 +123,12 @@ export default function App() {
               onClick={() => setSection('liquidation')}
               className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                 section === 'liquidation'
-                  ? 'bg-red-600 text-white shadow-sm dark:bg-red-600'
-                  : 'text-secondary-light hover:bg-red-50 hover:text-red-700 dark:text-secondary-dark dark:hover:bg-red-950/40 dark:hover:text-red-300'
+                  ? 'bg-destructive text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-destructive-subtle hover:text-destructive'
               }`}
             >
               <LiquidationArrow
-                className={section === 'liquidation' ? '!text-white' : ''}
+                className={section === 'liquidation' ? '!text-primary-foreground' : ''}
               />
               Liquidation Check
             </button>
@@ -146,8 +146,8 @@ export default function App() {
               </Card>
 
               {apiError && (
-                <div className="flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900/50 dark:bg-red-950/30 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-red-800 dark:text-red-200">{apiError.message}</p>
+                <div className="alert-destructive flex flex-col gap-3 rounded-xl px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm">{apiError.message}</p>
                   {apiError.retryable && (
                     <Button variant="secondary" onClick={handleFetch} disabled={loading}>
                       <RefreshCw size={16} />
@@ -159,7 +159,7 @@ export default function App() {
 
               <Card
                 title="Results"
-                icon={<Table2 size={18} className="text-accent dark:text-accent-dark" />}
+                icon={<Table2 size={18} className="text-primary" />}
                 action={
                   hasResults ? (
                     <Button variant="secondary" onClick={handleDownload}>
@@ -193,8 +193,10 @@ export default function App() {
             </Card>
           )}
         </div>
+      </main>
 
-        <footer className="mt-auto border-t border-border-light pt-6 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary-light dark:border-border-dark dark:text-secondary-dark">
+      <footer className="sticky bottom-0 z-50 shrink-0 border-t border-border bg-background/70 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
           <div>Internal tool · Public market data · No auth</div>
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
@@ -205,14 +207,14 @@ export default function App() {
               />
               <span>Powered by Mudrex API</span>
             </div>
-            <span className="hidden sm:inline text-border-light dark:text-border-dark">·</span>
+            <span className="hidden sm:inline text-border">·</span>
             <div className="flex items-center gap-2">
               <span>Developed by Jithin Mohandas</span>
               <a
                 href="https://github.com/DecentralizedJM"
                 target="_blank"
                 rel="noreferrer"
-                className="text-primary-light dark:text-primary-dark hover:text-accent dark:hover:text-accent-dark transition-colors"
+                className="text-foreground hover:text-primary-glow transition-colors"
                 title="GitHub Profile"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -221,8 +223,8 @@ export default function App() {
               </a>
             </div>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }

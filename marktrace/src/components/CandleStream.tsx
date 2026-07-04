@@ -45,13 +45,16 @@ export function CandleStream() {
   const bodyBottomY = y(bodyBottom);
   const bodyH = Math.max(bodyBottomY - bodyTopY, 2);
 
-  const fill = bullish ? '#089981' : '#f23645';
+  const colorClass = bullish ? 'text-success' : 'text-destructive';
   const cx = W / 2;
 
   return (
-    <div className="flex h-10 w-10 items-center justify-center overflow-hidden" aria-hidden="true">
+    <div
+      className={`flex h-10 w-10 items-center justify-center overflow-hidden ${colorClass}`}
+      aria-hidden="true"
+    >
       <svg
-        key={index} // Force re-render for crisp animation if needed, or rely on CSS
+        key={index}
         width={W}
         height={H}
         viewBox={`0 0 ${W} ${H}`}
@@ -62,7 +65,7 @@ export function CandleStream() {
           y1={highY}
           x2={cx}
           y2={lowY}
-          stroke={fill}
+          stroke="currentColor"
           strokeWidth="1.5"
           strokeLinecap="round"
           vectorEffect="non-scaling-stroke"
@@ -72,7 +75,7 @@ export function CandleStream() {
           y={bodyTopY}
           width={7}
           height={bodyH}
-          fill={fill}
+          fill="currentColor"
           rx="1"
         />
       </svg>

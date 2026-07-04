@@ -3,7 +3,7 @@ const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
 const SECONDS = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 
 const fieldClass =
-  'rounded-lg border border-border-light bg-white px-2 py-2.5 text-sm text-primary-light focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 dark:border-border-dark dark:bg-card-dark dark:text-primary-dark';
+  'rounded-lg border border-border bg-input px-2 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-ring';
 
 interface DateTime24InputProps {
   label: string;
@@ -40,7 +40,7 @@ export function DateTime24Input({ label, value, onChange, required, id, showSeco
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={inputId} className="text-sm font-medium text-primary-light dark:text-primary-dark">
+      <label htmlFor={inputId} className="text-sm font-medium text-foreground">
         {label}
       </label>
       <div className="flex min-w-0 items-center gap-1.5">
@@ -65,7 +65,7 @@ export function DateTime24Input({ label, value, onChange, required, id, showSeco
             </option>
           ))}
         </select>
-        <span className="shrink-0 text-sm text-secondary-light dark:text-secondary-dark" aria-hidden>
+        <span className="shrink-0 text-sm text-muted-foreground" aria-hidden>
           :
         </span>
         <select
@@ -83,7 +83,7 @@ export function DateTime24Input({ label, value, onChange, required, id, showSeco
         </select>
         {showSeconds && (
           <>
-            <span className="shrink-0 text-sm text-secondary-light dark:text-secondary-dark" aria-hidden>
+            <span className="shrink-0 text-sm text-muted-foreground" aria-hidden>
               :
             </span>
             <select

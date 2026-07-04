@@ -32,7 +32,7 @@ export function AboutButton() {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border-light bg-white px-3 text-sm font-medium text-primary-light transition-colors duration-theme hover:bg-neutral-50 dark:border-border-dark dark:bg-card-dark dark:text-primary-dark dark:hover:bg-neutral-900"
+        className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-input px-3 text-sm font-medium text-foreground transition-colors duration-theme hover:bg-muted"
       >
         <CircleHelp size={18} aria-hidden />
         About
@@ -40,7 +40,7 @@ export function AboutButton() {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-4 sm:items-center"
           role="presentation"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setOpen(false);
@@ -50,12 +50,12 @@ export function AboutButton() {
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="flex max-h-[min(90vh,44rem)] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border-light bg-card-light shadow-xl dark:border-border-dark dark:bg-card-dark"
+            className="surface-panel flex max-h-[min(90vh,44rem)] w-full max-w-2xl flex-col overflow-hidden rounded-xl shadow-panel"
           >
-            <div className="flex items-center justify-between border-b border-border-light px-5 py-4 dark:border-border-dark">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4 ">
               <h2
                 id={titleId}
-                className="text-base font-semibold text-primary-light dark:text-primary-dark"
+                className="text-base font-semibold text-foreground"
               >
                 About PriceFetcher
               </h2>
@@ -64,15 +64,15 @@ export function AboutButton() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close about"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-secondary-light hover:bg-neutral-100 dark:text-secondary-dark dark:hover:bg-neutral-900"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-5 overflow-y-auto px-5 py-4 text-sm leading-relaxed text-secondary-light dark:text-secondary-dark">
+            <div className="space-y-5 overflow-y-auto px-5 py-4 text-sm leading-relaxed text-muted-foreground">
               <section className="space-y-2">
-                <h3 className="font-semibold text-primary-light dark:text-primary-dark">
+                <h3 className="font-semibold text-foreground">
                   What this tool is for
                 </h3>
                 <p>
@@ -88,16 +88,16 @@ export function AboutButton() {
               </section>
 
               <section className="space-y-2">
-                <h3 className="font-semibold text-primary-light dark:text-primary-dark">
+                <h3 className="font-semibold text-foreground">
                   Mark price vs LTP (important)
                 </h3>
                 <p>
-                  <strong className="text-primary-light dark:text-primary-dark">LTP</strong> (last
+                  <strong className="text-foreground">LTP</strong> (last
                   traded price) is the last trade on the market. It can spike or wick when one large
                   order hits or liquidity is thin for a few seconds.
                 </p>
                 <p>
-                  <strong className="text-primary-light dark:text-primary-dark">Mark price</strong> is
+                  <strong className="text-foreground">Mark price</strong> is
                   Mudrex&apos;s fair reference price for unrealized P&amp;L and liquidation checks.
                   It is designed to be steadier than LTP so users are not punished by brief wicks or
                   thin-book prints. On Mudrex, liquidation is triggered by Mark price, not LTP.
@@ -113,7 +113,7 @@ export function AboutButton() {
                     href="https://mudrex.com/blog/understanding-mark-price-on-mudrex-futures/"
                     target="_blank"
                     rel="noreferrer"
-                    className="font-medium text-accent underline-offset-2 hover:underline dark:text-accent-dark"
+                    className="font-medium text-primary underline-offset-2 hover:underline"
                   >
                     Understanding Mark Price
                   </a>
@@ -122,7 +122,7 @@ export function AboutButton() {
                     href="https://mudrex.com/blog/liquidation-price-on-mudrex-futures/"
                     target="_blank"
                     rel="noreferrer"
-                    className="font-medium text-accent underline-offset-2 hover:underline dark:text-accent-dark"
+                    className="font-medium text-primary underline-offset-2 hover:underline"
                   >
                     Liquidation Price on Mudrex Futures
                   </a>
@@ -131,7 +131,7 @@ export function AboutButton() {
               </section>
 
               <section className="space-y-2">
-                <h3 className="font-semibold text-primary-light dark:text-primary-dark">
+                <h3 className="font-semibold text-foreground">
                   How liquidation works on Mudrex
                 </h3>
                 <p>
@@ -140,7 +140,7 @@ export function AboutButton() {
                   margin to meet maintenance margin, so the system closes it.
                 </p>
                 <p>
-                  The close is executed at the <strong className="text-primary-light dark:text-primary-dark">bankruptcy price</strong>{' '}
+                  The close is executed at the <strong className="text-foreground">bankruptcy price</strong>{' '}
                   (the level where initial margin is fully used). Mark price is the fair yardstick,
                   liquidation price is the &quot;start liquidating&quot; line, and bankruptcy price
                   is the &quot;margin fully used&quot; line.
@@ -154,7 +154,7 @@ export function AboutButton() {
               </section>
 
               <section className="space-y-2">
-                <h3 className="font-semibold text-primary-light dark:text-primary-dark">
+                <h3 className="font-semibold text-foreground">
                   Tool 1: Lookup
                 </h3>
                 <p>
@@ -162,7 +162,7 @@ export function AboutButton() {
                   24 hours). You pick the interval (for example 1 minute or 15 minutes) and timezone
                   (IST or UTC).
                 </p>
-                <p className="font-medium text-primary-light dark:text-primary-dark">How to use it</p>
+                <p className="font-medium text-foreground">How to use it</p>
                 <ol className="list-decimal space-y-1 pl-5">
                   <li>Enter the futures symbol (for example ESPORTS/USDT or BTCUSDT).</li>
                   <li>Set start and end date/time in 24-hour format.</li>
@@ -172,7 +172,7 @@ export function AboutButton() {
                     it for the ticket.
                   </li>
                 </ol>
-                <p className="font-medium text-primary-light dark:text-primary-dark">
+                <p className="font-medium text-foreground">
                   Typical use cases
                 </p>
                 <ul className="list-disc space-y-1 pl-5">
@@ -196,7 +196,7 @@ export function AboutButton() {
               </section>
 
               <section className="space-y-2">
-                <h3 className="font-semibold text-primary-light dark:text-primary-dark">
+                <h3 className="font-semibold text-foreground">
                   Tool 2: Liquidation Check
                 </h3>
                 <p>
@@ -209,7 +209,7 @@ export function AboutButton() {
                   against Mudrex asset rules and mark-price history, then shows a verdict and a
                   movement analysis you can use when talking to the user.
                 </p>
-                <p className="font-medium text-primary-light dark:text-primary-dark">How to use it</p>
+                <p className="font-medium text-foreground">How to use it</p>
                 <ol className="list-decimal space-y-1 pl-5">
                   <li>Open the Liquidation Check tab.</li>
                   <li>
@@ -219,12 +219,12 @@ export function AboutButton() {
                   <li>Pick the timezone that matches how the user reported the time (usually IST).</li>
                   <li>Run Liquidation Check and read the verdict plus analysis.</li>
                 </ol>
-                <p className="font-medium text-primary-light dark:text-primary-dark">
+                <p className="font-medium text-foreground">
                   What the verdict means
                 </p>
                 <ul className="list-disc space-y-1 pl-5">
                   <li>
-                    <strong className="text-primary-light dark:text-primary-dark">
+                    <strong className="text-foreground">
                       Valid liquidation:
                     </strong>{' '}
                     Mudrex Mark price in the window reached the liquidation level in the direction
@@ -232,14 +232,14 @@ export function AboutButton() {
                     shorts). Consistent with how Mudrex triggers liquidation.
                   </li>
                   <li>
-                    <strong className="text-primary-light dark:text-primary-dark">
+                    <strong className="text-foreground">
                       No liquidation wick found:
                     </strong>{' '}
                     Mark did not reach the reported liquidation price in that window. Ask the user
                     to confirm price and timestamp, or escalate if they still show a liquidation.
                   </li>
                   <li>
-                    <strong className="text-primary-light dark:text-primary-dark">
+                    <strong className="text-foreground">
                       Check rejected:
                     </strong>{' '}
                     Inputs do not match Mudrex (wrong leverage range, prices far from market,
@@ -247,7 +247,7 @@ export function AboutButton() {
                     again.
                   </li>
                 </ul>
-                <p className="font-medium text-primary-light dark:text-primary-dark">
+                <p className="font-medium text-foreground">
                   Typical use cases
                 </p>
                 <ul className="list-disc space-y-1 pl-5">
@@ -267,7 +267,7 @@ export function AboutButton() {
               </section>
 
               <section className="space-y-2">
-                <h3 className="font-semibold text-primary-light dark:text-primary-dark">
+                <h3 className="font-semibold text-foreground">
                   Tips for support
                 </h3>
                 <ul className="list-disc space-y-1 pl-5">
@@ -292,11 +292,11 @@ export function AboutButton() {
               </section>
             </div>
 
-            <div className="border-t border-border-light px-5 py-3 dark:border-border-dark">
+            <div className="border-t border-border px-5 py-3 ">
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 dark:bg-accent-dark sm:w-auto"
+                className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 sm:w-auto"
               >
                 Got it
               </button>

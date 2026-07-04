@@ -79,12 +79,12 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
             required
           />
           {showSuggestions && filtered.length > 0 && (
-            <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-border-light bg-white shadow-lg dark:border-border-dark dark:bg-card-dark">
+              <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-border bg-card shadow-panel">
               {filtered.map((symbol) => (
                 <li key={symbol}>
                   <button
                     type="button"
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-muted"
                     onMouseDown={() => {
                       update('symbol', symbol);
                       setShowSuggestions(false);
@@ -142,13 +142,13 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
       </div>
 
       {validationError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+        <div className="alert-destructive rounded-lg px-4 py-3 text-sm">
           {validationError}
         </div>
       )}
 
       {rangeWarning && (
-        <div className="rounded-lg border border-warning/30 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-warning/40 dark:bg-amber-950/30 dark:text-amber-200">
+        <div className="alert-warning rounded-lg px-4 py-3 text-sm">
           {rangeWarning}
         </div>
       )}

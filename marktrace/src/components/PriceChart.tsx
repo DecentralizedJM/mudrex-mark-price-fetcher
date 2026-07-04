@@ -13,6 +13,7 @@ import {
 } from 'lightweight-charts';
 import { Download } from 'lucide-react';
 import type { ChartCandle } from '../lib/chart-data';
+import { collectChartPrices, inferPriceFormat } from '../lib/chart-data';
 import {
   buildCandlestickSeriesOptions,
   buildChartOptions,
@@ -147,6 +148,16 @@ export function PriceChart({
 
     try {
       const theme = getChartTheme();
+      const overlayPrices = priceLines.map((line) => line.price);
+      const priceFormat = inferPriceFormat(collectChartPrices(candles, overlayPrices));
+
+      series.applyOptions({
+        priceFormat: {
+          type: 'price',
+          precision: priceFormat.precision,
+          minMove: priceFormat.minMove,
+        },
+      });
       series.setData(toSeriesData(candles));
 
       for (const line of priceLineRefs.current) {

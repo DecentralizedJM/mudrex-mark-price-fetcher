@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CircleHelp, X } from 'lucide-react';
 
 export function AboutButton() {
@@ -38,20 +39,21 @@ export function AboutButton() {
         About
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-4 sm:items-center"
-          role="presentation"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
-          }}
-        >
+      {open &&
+        createPortal(
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            className="surface-panel flex max-h-[min(90vh,44rem)] w-full max-w-2xl flex-col overflow-hidden rounded-xl shadow-panel"
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-overlay p-4 sm:items-center"
+            role="presentation"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) setOpen(false);
+            }}
           >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
+              className="surface-panel flex max-h-[min(90vh,44rem)] w-full max-w-2xl flex-col overflow-hidden rounded-xl shadow-panel"
+            >
             <div className="flex items-center justify-between border-b border-border px-5 py-4 ">
               <h2
                 id={titleId}
@@ -302,8 +304,9 @@ export function AboutButton() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Activity, ShieldAlert, CheckCircle2, Copy, Check } from 'lucide-react';
+import { Activity, ShieldAlert, CheckCircle2, Check } from 'lucide-react';
 import { filterSymbols, loadSymbolSuggestions, normalizeSymbol } from '../lib/symbols';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -57,7 +57,6 @@ export function LiquidationCheck() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<CheckResult | null>(null);
   const [clientError, setClientError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     loadSymbolSuggestions().then(setSuggestions);
@@ -81,19 +80,7 @@ export function LiquidationCheck() {
     setClientError(null);
     setResult(null);
     setStatus('idle');
-    setCopied(false);
   }, [symbol, side, leverage, entryPrice, liqPrice, liqTime, timezone]);
-
-  const copyAgentReply = async () => {
-    if (!result?.analysis?.agentReply) return;
-    try {
-      await navigator.clipboard.writeText(result.analysis.agentReply);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  };
 
   const handleTimezoneChange = (next: TimezoneId) => {
     setTimezone(next);
@@ -322,7 +309,7 @@ export function LiquidationCheck() {
               </div>
               <div className="min-w-0 flex-1 space-y-3">
                 <h3
-                  className={`text-lg font-semibold ${
+                  className={`flex items-center gap-2 text-lg font-semibold ${
                     result.kind === 'hit'
                       ? 'text-red-900 dark:text-red-300'
                       : result.kind === 'miss'
@@ -330,11 +317,18 @@ export function LiquidationCheck() {
                         : 'text-amber-900 dark:text-amber-300'
                   }`}
                 >
-                  {result.kind === 'hit'
-                    ? 'VERDICT: VALID LIQUIDATION'
-                    : result.kind === 'miss'
-                      ? 'VERDICT: NO LIQUIDATION WICK FOUND'
-                      : 'CHECK REJECTED'}
+                  {result.kind === 'hit' ? (
+                    <>
+                      VERDICT: VALID LIQUIDATION
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-white dark:bg-green-500">
+                        <Check size={14} strokeWidth={3} aria-hidden />
+                      </span>
+                    </>
+                  ) : result.kind === 'miss' ? (
+                    'VERDICT: NO LIQUIDATION WICK FOUND'
+                  ) : (
+                    'CHECK REJECTED'
+                  )}
                 </h3>
                 <p
                   className={`text-sm leading-relaxed ${
@@ -384,24 +378,13 @@ export function LiquidationCheck() {
 
           {result.analysis && (
             <div className="animate-in rounded-xl border border-border-light bg-card-light p-5 dark:border-border-dark dark:bg-card-dark">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-primary-light dark:text-primary-dark">
-                    Price movement analysis
-                  </h3>
-                  <p className="mt-1 text-sm leading-relaxed text-secondary-light dark:text-secondary-dark">
-                    {result.analysis.headline}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={copyAgentReply}
-                  className="shrink-0"
-                >
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                  {copied ? 'Copied' : 'Copy reply for user'}
-                </Button>
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-primary-light dark:text-primary-dark">
+                  Price movement analysis
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-secondary-light dark:text-secondary-dark">
+                  {result.analysis.headline}
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -426,7 +409,7 @@ export function LiquidationCheck() {
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-secondary-light dark:text-secondary-dark">
                   Suggested user reply
                 </h4>
-                <p className="mt-2 text-sm leading-relaxed text-primary-light dark:text-primary-dark">
+                <p className="mt-2 select-text text-sm leading-relaxed text-primary-light dark:text-primary-dark">
                   {result.analysis.agentReply}
                 </p>
               </div>

@@ -33,13 +33,19 @@ Deploy from the **repository root** (not this subfolder). The root `Dockerfile` 
 
 1. Connect this repo to Railway.
 2. Railway uses the root `Dockerfile` automatically.
-3. No secrets or env vars required for basic operation.
+3. No login on the public support UI. Optional secrets:
 
-Optional rate limits (set in Railway variables):
+- `MUDREX_API_KEY`: server-only; required for Liquidation Check
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD`: admin dashboard
+
+Optional rate limits (per IP):
 
 - `RATE_LIMIT_WINDOW_MS`: default `900000` (15 min)
-- `RATE_LIMIT_MAX`: default `120` requests per IP
-- `RATE_LIMIT_API_MAX`: default `30` price fetches per IP
+- `RATE_LIMIT_MAX`: default `60` general requests
+- `RATE_LIMIT_API_MAX`: default `20` price lookups
+- `RATE_LIMIT_LIQ_MAX`: default `10` liquidation checks
+
+Hardening: small JSON body limit (`16kb`), security headers, no `X-Powered-By`, per-IP rate limits on expensive routes.
 
 ### Liquidation Check (Mudrex source of truth)
 

@@ -143,13 +143,13 @@ function validateCrossInWindow(input: {
 }): string | null {
   const { side, liquidationPrice, markLow, markHigh } = input;
   if (side === 'Long') {
-    // Mark must have been above liq at some point, then fallen to/below it.
-    if (markHigh <= liquidationPrice) {
-      return `Mudrex mark never traded above the liquidation price ${formatPrice(liquidationPrice)} in this window (mark high ${formatPrice(markHigh)}). Mark was already at or below that level, so these prices do not describe a liquidation event here.`;
+    // Mark must have reached liq from above (high at or above liq). Always-below is invalid input.
+    if (markHigh < liquidationPrice) {
+      return `Mudrex mark never reached the liquidation price ${formatPrice(liquidationPrice)} in this window (mark high ${formatPrice(markHigh)}). Mark stayed below that level, so these prices do not describe a liquidation event here.`;
     }
-  } else if (markLow >= liquidationPrice) {
-    // Mark must have been below liq at some point, then risen to/above it.
-    return `Mudrex mark never traded below the liquidation price ${formatPrice(liquidationPrice)} in this window (mark low ${formatPrice(markLow)}). Mark was already at or above that level, so these prices do not describe a liquidation event here.`;
+  } else if (markLow > liquidationPrice) {
+    // Mark must have reached liq from below (low at or below liq). Always-above is invalid input.
+    return `Mudrex mark never reached the liquidation price ${formatPrice(liquidationPrice)} in this window (mark low ${formatPrice(markLow)}). Mark stayed above that level, so these prices do not describe a liquidation event here.`;
   }
   return null;
 }
@@ -173,11 +173,11 @@ function buildAssetSummary(
   return {
     symbol: normalizedSymbol.replace('/', ''),
     name: normalizedSymbol,
-        minLeverage: '-',
-        maxLeverage: '-',
-        minPrice: '-',
-        maxPrice: '-',
-        priceStep: '-',
+    minLeverage: '-',
+    maxLeverage: '-',
+    minPrice: '-',
+    maxPrice: '-',
+    priceStep: '-',
     currentlyListed: false,
   };
 }
@@ -321,6 +321,10 @@ export async function runLiquidationCheck(
 
   if (input.side !== 'Long' && input.side !== 'Short') {
     return { kind: 'error', message: 'Side must be Long or Short.' };
+  }
+
+  if (input.timezone !== 'Asia/Kolkata' && input.timezone !== 'UTC') {
+    return { kind: 'error', message: 'Timezone must be Asia/Kolkata or UTC.' };
   }
 
   let leverage: number;

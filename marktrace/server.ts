@@ -43,12 +43,22 @@ try {
 }
 
 const app = express();
+app.disable('x-powered-by');
 app.set('trust proxy', 1);
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  next();
+});
 app.use(express.json({ limit: '16kb' }));
 
 const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
-const generalMax = Number(process.env.RATE_LIMIT_MAX) || 120;
-const apiMax = Number(process.env.RATE_LIMIT_API_MAX) || 30;
+const generalMax = Number(process.env.RATE_LIMIT_MAX) || 60;
+const apiMax = Number(process.env.RATE_LIMIT_API_MAX) || 20;
+const liqMax = Number(process.env.RATE_LIMIT_LIQ_MAX) || 10;
 
 const generalLimiter = rateLimit({
   windowMs,
@@ -76,11 +86,29 @@ const apiLimiter = rateLimit({
   },
 });
 
-app.use(generalLimiter);
+const liquidationLimiter = rateLimit({
+  windowMs,
+  max: liqMax,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    recordUsageEvent({
+      ...getRequestMeta(req),
+      action: 'rate_limited',
+      status: 'rate_limited',
+      errorMessage: 'Liquidation check rate limit reached.',
+    });
+    res.status(429).json({
+      message: 'Liquidation check rate limit reached. Please wait before trying again.',
+    });
+  },
+});
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
+
+app.use(generalLimiter);
 
 app.get('/api/symbols', (_req, res) => {
   try {
@@ -117,7 +145,7 @@ app.post('/api/usage/track', (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/api/liquidation/check', apiLimiter, async (req, res) => {
+app.post('/api/liquidation/check', liquidationLimiter, async (req, res) => {
   const started = Date.now();
   const meta = getRequestMeta(req);
   const body = req.body as LiquidationCheckInput;

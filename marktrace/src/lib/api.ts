@@ -99,10 +99,20 @@ function computeSummary(rows: MergedRow[]): FetchSummary {
   };
 }
 
+const ALLOWED_TIMEZONES = new Set(['Asia/Kolkata', 'UTC']);
+const ALLOWED_AGGREGATIONS = new Set(['1m', '3t', '5t', '15t', '30t', '1h']);
+
 export function validateLookup(params: LookupParams): string | null {
   if (!params.symbol.trim()) return 'Symbol is required.';
   if (!params.startTime) return 'Start date & time is required.';
   if (!params.endTime) return 'End date & time is required.';
+
+  if (!ALLOWED_TIMEZONES.has(params.timezone)) {
+    return 'Timezone must be Asia/Kolkata or UTC.';
+  }
+  if (!ALLOWED_AGGREGATIONS.has(params.aggregation)) {
+    return 'Invalid candle interval.';
+  }
 
   try {
     normalizeSymbol(params.symbol);
@@ -115,6 +125,10 @@ export function validateLookup(params: LookupParams): string | null {
     params.endTime,
     params.timezone
   );
+
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return 'Start or end date/time is invalid.';
+  }
 
   if (end <= start) return 'End time must be after start time.';
 

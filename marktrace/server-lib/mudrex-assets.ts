@@ -37,7 +37,10 @@ function parseNum(value: string | undefined): number | null {
 export function isMultipleOfStep(value: number, step: number): boolean {
   if (step <= 0) return true;
   const ratio = value / step;
-  return Math.abs(ratio - Math.round(ratio)) < 1e-8;
+  const nearest = Math.round(ratio);
+  // Relative tolerance handles tiny steps (e.g. 1e-8) without false rejects.
+  const tol = Math.max(1e-6, Math.abs(nearest) * 1e-9);
+  return Math.abs(ratio - nearest) <= tol;
 }
 
 export async function fetchAssetBySymbol(normalizedSymbol: string): Promise<MudrexAsset | null> {

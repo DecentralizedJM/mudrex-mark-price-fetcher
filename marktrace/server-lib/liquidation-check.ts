@@ -95,6 +95,65 @@ function findNearestCandle<T extends number[]>(
   return best;
 }
 
+function markWindowBounds(markCandles: MarkCandle[]): { markLow: number; markHigh: number } {
+  let markLow = Infinity;
+  let markHigh = -Infinity;
+  for (const candle of markCandles) {
+    // [openTime, open, high, low, close]
+    markLow = Math.min(markLow, candle[1], candle[2], candle[3], candle[4]);
+    markHigh = Math.max(markHigh, candle[1], candle[2], candle[3], candle[4]);
+  }
+  return { markLow, markHigh };
+}
+
+/**
+ * Entry / liq must sit near Mudrex mark prices in the window.
+ * Rejects nonsense like entry=2 / liq=1 when mark is ~0.025.
+ */
+function validatePricesAgainstMarkWindow(input: {
+  entryPrice: number;
+  liquidationPrice: number;
+  markLow: number;
+  markHigh: number;
+  symbol: string;
+}): string | null {
+  const { entryPrice, liquidationPrice, markLow, markHigh, symbol } = input;
+  // Allow wide room for volatility, but block orders-of-magnitude mismatches.
+  const floor = markLow * 0.2;
+  const ceiling = markHigh * 5;
+
+  if (entryPrice < floor || entryPrice > ceiling) {
+    return `Entry price ${formatPrice(entryPrice)} is far from Mudrex mark prices in this window (${formatPrice(markLow)} – ${formatPrice(markHigh)} for ${symbol}). Use the real entry from the position.`;
+  }
+  if (liquidationPrice < floor || liquidationPrice > ceiling) {
+    return `Liquidation price ${formatPrice(liquidationPrice)} is far from Mudrex mark prices in this window (${formatPrice(markLow)} – ${formatPrice(markHigh)} for ${symbol}). Use the real liquidation price from the position.`;
+  }
+  return null;
+}
+
+/**
+ * A liquidation in this window requires mark to cross the liq level,
+ * not merely sit on the wrong side of an absurd threshold.
+ */
+function validateCrossInWindow(input: {
+  side: LiquidationSide;
+  liquidationPrice: number;
+  markLow: number;
+  markHigh: number;
+}): string | null {
+  const { side, liquidationPrice, markLow, markHigh } = input;
+  if (side === 'Long') {
+    // Mark must have been above liq at some point, then fallen to/below it.
+    if (markHigh <= liquidationPrice) {
+      return `Mudrex mark never traded above the liquidation price ${formatPrice(liquidationPrice)} in this window (mark high ${formatPrice(markHigh)}). Mark was already at or below that level, so these prices do not describe a liquidation event here.`;
+    }
+  } else if (markLow >= liquidationPrice) {
+    // Mark must have been below liq at some point, then risen to/above it.
+    return `Mudrex mark never traded below the liquidation price ${formatPrice(liquidationPrice)} in this window (mark low ${formatPrice(markLow)}). Mark was already at or above that level, so these prices do not describe a liquidation event here.`;
+  }
+  return null;
+}
+
 function buildAssetSummary(
   asset: MudrexAsset | null,
   normalizedSymbol: string,
@@ -363,10 +422,34 @@ export async function runLiquidationCheck(
     };
   }
 
+  const typedMarks = markCandles as MarkCandle[];
+  const { markLow, markHigh } = markWindowBounds(typedMarks);
+
+  const priceVsMarkError = validatePricesAgainstMarkWindow({
+    entryPrice,
+    liquidationPrice,
+    markLow,
+    markHigh,
+    symbol: normalizedSymbol,
+  });
+  if (priceVsMarkError) {
+    return { kind: 'error', message: priceVsMarkError, asset: assetSummary };
+  }
+
+  const crossError = validateCrossInWindow({
+    side: input.side,
+    liquidationPrice,
+    markLow,
+    markHigh,
+  });
+  if (crossError) {
+    return { kind: 'error', message: crossError, asset: assetSummary };
+  }
+
   let extremeMark: number | null = null;
   let extremeTime: number | null = null;
 
-  for (const candle of markCandles as MarkCandle[]) {
+  for (const candle of typedMarks) {
     const val = input.side === 'Long' ? candle[3] : candle[2];
     if (
       extremeMark === null ||

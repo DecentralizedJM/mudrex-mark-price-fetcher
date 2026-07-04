@@ -51,7 +51,9 @@ function StatCard({
   return (
     <div className={`rounded-lg border px-3 py-2.5 ${accentClass}`}>
       <p className="meta-label">{label}</p>
-      <p className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">{value}</p>
+      <p className="mt-1 break-all font-mono text-sm font-semibold tabular-nums text-foreground sm:break-normal">
+        {value}
+      </p>
       {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
@@ -104,40 +106,40 @@ export function LiquidationVisualPanel(props: LiquidationVisualPanelProps) {
       : 'For a Short, Mudrex liquidates when mark price rises to or above the liquidation price.';
 
   return (
-    <div className="animate-in space-y-4 rounded-xl border border-border bg-card p-5">
+    <div className="animate-in space-y-4 rounded-xl border border-border bg-card p-4 sm:p-5">
       <div>
         <h3 className="text-sm font-semibold text-foreground">Visual liquidation check</h3>
-        <p className="mt-1 text-xs text-muted-foreground">{ruleText}</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{ruleText}</p>
       </div>
 
-      <div className="flex flex-col items-stretch gap-3 rounded-lg border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 flex-1 space-y-1">
+      <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
+        <div className="min-w-0 space-y-1">
           <p className="meta-label">Position</p>
-          <p className="font-mono text-sm font-semibold text-foreground">
+          <p className="break-words font-mono text-sm font-semibold text-foreground">
             {symbol} · {side} · {leverage}x
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <div className="rounded-lg border border-primary-border bg-primary-subtle px-3 py-2 text-center">
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-center sm:gap-3">
+          <div className="flex-1 rounded-lg border border-primary-border bg-primary-subtle px-3 py-2.5 text-center sm:min-w-[7rem]">
             <p className="meta-label">Entry</p>
             <p className="font-mono text-sm font-semibold tabular-nums text-primary">
               {formatPrice(entryPrice)}
             </p>
           </div>
 
-          <div className="flex flex-col items-center px-1">
+          <div className="flex flex-row items-center justify-center gap-2 py-1 sm:flex-col sm:px-2 sm:py-0">
             {side === 'Long' ? (
-              <ArrowDown className="h-5 w-5 text-destructive" aria-hidden />
+              <ArrowDown className="h-5 w-5 shrink-0 text-destructive sm:h-6 sm:w-6" aria-hidden />
             ) : (
-              <ArrowUp className="h-5 w-5 text-destructive" aria-hidden />
+              <ArrowUp className="h-5 w-5 shrink-0 text-destructive sm:h-6 sm:w-6" aria-hidden />
             )}
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <span className="text-center text-[10px] uppercase leading-tight tracking-wide text-muted-foreground">
               mark must {side === 'Long' ? 'fall' : 'rise'}
             </span>
           </div>
 
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-center">
+          <div className="flex-1 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-center sm:min-w-[7rem]">
             <p className="meta-label">Liquidation</p>
             <p className="font-mono text-sm font-semibold tabular-nums text-destructive">
               {formatPrice(liqPrice)}
@@ -147,14 +149,14 @@ export function LiquidationVisualPanel(props: LiquidationVisualPanelProps) {
       </div>
 
       <div
-        className={`rounded-lg border px-4 py-3 text-sm leading-relaxed ${
+        className={`rounded-lg border px-3 py-3 text-sm leading-relaxed sm:px-4 ${
           summary.accent === 'destructive' ? 'alert-destructive' : 'alert-success'
         }`}
       >
         {summary.text}
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Reported time" value={reportedLabel} accent="warning" />
         <StatCard
           label="Mark at reported time"
@@ -163,9 +165,7 @@ export function LiquidationVisualPanel(props: LiquidationVisualPanelProps) {
         />
         <StatCard
           label={side === 'Long' ? 'Lowest mark in window' : 'Highest mark in window'}
-          value={
-            props.extremeMark !== undefined ? formatPrice(props.extremeMark) : '-'
-          }
+          value={props.extremeMark !== undefined ? formatPrice(props.extremeMark) : '-'}
           accent={kind === 'hit' ? 'destructive' : 'success'}
         />
         <StatCard

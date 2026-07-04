@@ -66,8 +66,8 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-8 items-end">
-        <div ref={wrapperRef} className="relative sm:col-span-2 lg:col-span-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8 items-end">
+        <div ref={wrapperRef} className="relative md:col-span-2 lg:col-span-2">
           <Input
             label="Symbol"
             placeholder="ESPORTS/USDT"
@@ -98,7 +98,7 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
           )}
         </div>
 
-        <div className="sm:col-span-2 lg:col-span-2">
+        <div className="md:col-span-2 lg:col-span-2">
           <DateTime24Input
             label="Start date & time"
             value={params.startTime}
@@ -107,7 +107,7 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
           />
         </div>
 
-        <div className="sm:col-span-2 lg:col-span-2">
+        <div className="md:col-span-2 lg:col-span-2">
           <DateTime24Input
             label="End date & time"
             value={params.endTime}
@@ -116,7 +116,7 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
           />
         </div>
 
-        <div className="sm:col-span-1 lg:col-span-1">
+        <div className="md:col-span-1 lg:col-span-1">
           <Select
             label="Interval"
             value={params.aggregation}
@@ -125,7 +125,7 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
           />
         </div>
 
-        <div className="sm:col-span-1 lg:col-span-1">
+        <div className="md:col-span-1 lg:col-span-1">
           <Select
             label="Timezone"
             value={params.timezone}

@@ -97,7 +97,7 @@ export default function App() {
       <Header />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-6xl space-y-4 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8">
           <div
             role="tablist"
             aria-label="Tool"
@@ -108,7 +108,7 @@ export default function App() {
               role="tab"
               aria-selected={section === 'lookup'}
               onClick={() => setSection('lookup')}
-              className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
                 section === 'lookup'
                   ? 'border border-primary-border bg-primary-subtle text-primary'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -122,7 +122,7 @@ export default function App() {
               role="tab"
               aria-selected={section === 'liquidation'}
               onClick={() => setSection('liquidation')}
-              className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
                 section === 'liquidation'
                   ? 'bg-destructive text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:bg-destructive-subtle hover:text-destructive'
@@ -131,7 +131,8 @@ export default function App() {
               <LiquidationArrow
                 className={section === 'liquidation' ? '!text-primary-foreground' : ''}
               />
-              Liquidation Check
+              <span className="sm:hidden">Liq. Check</span>
+              <span className="hidden sm:inline">Liquidation Check</span>
             </button>
           </div>
 
@@ -163,7 +164,7 @@ export default function App() {
                 icon={<Table2 size={18} className="text-primary" />}
                 action={
                   hasResults ? (
-                    <Button variant="secondary" onClick={handleDownload}>
+                    <Button variant="secondary" onClick={handleDownload} className="w-full sm:w-auto">
                       <Download size={16} />
                       Download CSV
                     </Button>
@@ -198,7 +199,7 @@ export default function App() {
       </main>
 
       <footer className="sticky bottom-0 z-50 shrink-0 border-t border-border bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-3 py-3 text-center text-xs text-muted-foreground sm:flex-row sm:gap-4 sm:px-6 sm:py-4 sm:text-left lg:px-8">
           <div>Internal tool · Public market data · No auth</div>
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-2">

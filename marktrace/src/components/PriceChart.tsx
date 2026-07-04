@@ -19,6 +19,7 @@ import {
   buildChartOptions,
   getChartTheme,
 } from '../lib/chart-theme';
+import { useResponsiveChartHeight } from '../hooks/useMediaQuery';
 import { Button } from './ui/Button';
 
 const EMPTY_PRICE_LINES: PriceLineOverlay[] = [];
@@ -84,6 +85,7 @@ export function PriceChart({
   exportFilename = 'price-chart',
   className = '',
 }: PriceChartProps) {
+  const chartHeight = useResponsiveChartHeight(height);
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -108,7 +110,7 @@ export function PriceChart({
     const chart = createChart(container, {
       ...buildChartOptions(theme),
       width: container.clientWidth,
-      height,
+      height: chartHeight,
     });
 
     const series = chart.addSeries(CandlestickSeries, buildCandlestickSeriesOptions(theme));
@@ -141,7 +143,13 @@ export function PriceChart({
       markersPluginRef.current = null;
       priceLineRefs.current = [];
     };
-  }, [height, applyTheme]);
+  }, [chartHeight, applyTheme]);
+
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.applyOptions({ height: chartHeight });
+    }
+  }, [chartHeight]);
 
   useEffect(() => {
     const series = seriesRef.current;
@@ -216,16 +224,16 @@ export function PriceChart({
     <div className={`space-y-2 ${className}`}>
       {(title || subtitle || showExport) && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+          <div className="min-w-0">
             {title && (
               <h4 className="text-sm font-semibold text-foreground">{title}</h4>
             )}
             {subtitle && (
-              <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+              <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">{subtitle}</p>
             )}
           </div>
           {showExport && (
-            <Button variant="secondary" onClick={handleExport} className="shrink-0">
+            <Button variant="secondary" onClick={handleExport} className="w-full shrink-0 sm:w-auto">
               <Download size={16} />
               Save chart
             </Button>
@@ -234,21 +242,21 @@ export function PriceChart({
       )}
       <div
         ref={containerRef}
-        className="w-full overflow-hidden rounded-lg border border-border"
-        style={{ height }}
+        className="w-full overflow-hidden rounded-lg border border-border touch-pan-x"
+        style={{ height: chartHeight }}
         role="img"
         aria-label={title ?? 'Price candlestick chart'}
       />
       {legend && legend.length > 0 && (
-        <div className="flex flex-wrap gap-x-4 gap-y-2 pt-1">
+        <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:flex-wrap sm:gap-x-4 sm:gap-y-2">
           {legend.map((item) => (
-            <div key={item.label} className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div key={item.label} className="flex min-w-0 items-start gap-2 text-xs text-muted-foreground">
               <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: item.color }}
                 aria-hidden
               />
-              <span>{item.label}</span>
+              <span className="min-w-0 break-words leading-snug">{item.label}</span>
             </div>
           ))}
         </div>

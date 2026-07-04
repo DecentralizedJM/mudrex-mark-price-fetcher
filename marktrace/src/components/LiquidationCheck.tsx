@@ -206,8 +206,8 @@ export function LiquidationCheck() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleCheck} className="space-y-5">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6 items-end">
-          <div ref={wrapperRef} className="relative sm:col-span-2 lg:col-span-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6 items-end">
+          <div ref={wrapperRef} className="relative md:col-span-2 lg:col-span-2">
             <Input
               label="Symbol"
               placeholder="ESPORTS/USDT"
@@ -238,7 +238,7 @@ export function LiquidationCheck() {
             )}
           </div>
 
-          <div className="sm:col-span-1 lg:col-span-1">
+          <div className="md:col-span-1 lg:col-span-1">
             <Select
               label="Side"
               value={side}
@@ -250,7 +250,7 @@ export function LiquidationCheck() {
             />
           </div>
 
-          <div className="sm:col-span-1 lg:col-span-1">
+          <div className="md:col-span-1 lg:col-span-1">
             <Input
               label="Leverage (x)"
               type="number"
@@ -263,7 +263,7 @@ export function LiquidationCheck() {
             />
           </div>
 
-          <div className="sm:col-span-1 lg:col-span-1">
+          <div className="md:col-span-1 lg:col-span-1">
             <Input
               label="Entry Price"
               type="number"
@@ -276,7 +276,7 @@ export function LiquidationCheck() {
             />
           </div>
 
-          <div className="sm:col-span-1 lg:col-span-1">
+          <div className="md:col-span-1 lg:col-span-1">
             <Input
               label="Liquidation Price"
               type="number"
@@ -289,7 +289,7 @@ export function LiquidationCheck() {
             />
           </div>
 
-          <div className="sm:col-span-2 lg:col-span-3">
+          <div className="md:col-span-2 lg:col-span-3">
             <DateTime24Input
               label="Reported Liquidation Time"
               value={liqTime}
@@ -299,7 +299,7 @@ export function LiquidationCheck() {
             />
           </div>
 
-          <div className="sm:col-span-1 lg:col-span-1">
+          <div className="md:col-span-1 lg:col-span-1">
             <Select
               label="Timezone"
               value={timezone}
@@ -372,7 +372,7 @@ export function LiquidationCheck() {
             )}
 
           <div
-            className={`animate-in rounded-xl border p-6 ${
+            className={`animate-in rounded-xl border p-4 sm:p-6 ${
               result.kind === 'hit'
                 ? 'alert-destructive'
                 : result.kind === 'miss'
@@ -380,27 +380,30 @@ export function LiquidationCheck() {
                   : 'alert-warning'
             }`}
           >
-            <div className="flex items-start gap-4">
-              <div className="mt-1 shrink-0">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+              <div className="shrink-0 sm:mt-1">
                 {result.kind === 'hit' ? (
-                  <ShieldAlert className="h-8 w-8 text-destructive" />
+                  <ShieldAlert className="h-7 w-7 text-destructive sm:h-8 sm:w-8" />
                 ) : result.kind === 'miss' ? (
-                  <CheckCircle2 className="h-8 w-8 text-success" />
+                  <CheckCircle2 className="h-7 w-7 text-success sm:h-8 sm:w-8" />
                 ) : (
-                  <ShieldAlert className="h-8 w-8 text-warning" />
+                  <ShieldAlert className="h-7 w-7 text-warning sm:h-8 sm:w-8" />
                 )}
               </div>
               <div className="min-w-0 flex-1 space-y-3">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <h3 className="flex flex-wrap items-center gap-2 text-base font-semibold leading-snug text-foreground sm:text-lg">
                   {result.kind === 'hit' ? (
                     <>
-                      VERDICT: VALID LIQUIDATION
+                      <span>VERDICT: VALID LIQUIDATION</span>
                       <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-success text-primary-foreground">
                         <Check size={14} strokeWidth={3} aria-hidden />
                       </span>
                     </>
                   ) : result.kind === 'miss' ? (
-                    'VERDICT: NO LIQUIDATION WICK FOUND'
+                    <>
+                      <span className="sm:hidden">VERDICT: NO LIQ. WICK</span>
+                      <span className="hidden sm:inline">VERDICT: NO LIQUIDATION WICK FOUND</span>
+                    </>
                   ) : (
                     'CHECK REJECTED'
                   )}
@@ -433,7 +436,7 @@ export function LiquidationCheck() {
           </div>
 
           {result.analysis && (
-            <div className="animate-in surface-panel rounded-xl p-5">
+            <div className="animate-in surface-panel rounded-xl p-4 sm:p-5">
               <div className="mb-4">
                 <h3 className="text-sm font-semibold text-foreground">
                   Price movement analysis

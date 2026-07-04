@@ -40,7 +40,7 @@ export function SummaryCards({ summary, timezone }: SummaryCardsProps) {
       : '';
 
   return (
-    <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mb-5 grid grid-cols-1 gap-2 min-[480px]:grid-cols-2 lg:grid-cols-4 lg:gap-3">
       <StatCard label="Rows" value={String(summary.rowCount)} />
       <StatCard label="LTP range (low → high)" value={ltpRange} />
       <StatCard label="Mark range (low → high)" value={markRange} />

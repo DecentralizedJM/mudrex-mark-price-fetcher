@@ -43,15 +43,16 @@ export function DateTime24Input({ label, value, onChange, required, id, showSeco
       <label htmlFor={inputId} className="text-sm font-medium text-foreground">
         {label}
       </label>
-      <div className="flex min-w-0 items-center gap-1.5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1.5">
         <input
           id={inputId}
           type="date"
           value={date}
           required={required}
           onChange={(e) => emit(e.target.value, hour, minute, second)}
-          className={`datetime-input min-h-[42px] min-w-0 flex-1 ${fieldClass}`}
+          className={`datetime-input min-h-[42px] w-full min-w-0 sm:flex-1 ${fieldClass}`}
         />
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <select
           aria-label={`${label} hour`}
           value={hour}
@@ -101,6 +102,7 @@ export function DateTime24Input({ label, value, onChange, required, id, showSeco
             </select>
           </>
         )}
+        </div>
       </div>
     </div>
   );

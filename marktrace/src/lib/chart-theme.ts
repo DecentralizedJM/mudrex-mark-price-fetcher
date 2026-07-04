@@ -1,42 +1,46 @@
-/** Read Midnight Indigo CSS variables for lightweight-charts theming. */
-export function getChartTheme() {
-  if (typeof document === 'undefined') {
-    return defaultChartTheme();
-  }
+export type ChartThemeColors = {
+  background: string;
+  text: string;
+  grid: string;
+  border: string;
+  crosshair: string;
+  up: string;
+  down: string;
+  primary: string;
+  warning: string;
+  destructive: string;
+};
 
-  const root = document.documentElement;
-  const style = getComputedStyle(root);
+const DARK_THEME: ChartThemeColors = {
+  background: '#2a2d3a',
+  text: '#f5f5f7',
+  grid: 'rgba(255, 255, 255, 0.08)',
+  border: 'rgba(255, 255, 255, 0.14)',
+  crosshair: '#b8bcc8',
+  up: '#5eead4',
+  down: '#f87171',
+  primary: '#9d8cff',
+  warning: '#fbbf24',
+  destructive: '#f87171',
+};
 
-  const read = (name: string, fallback: string) =>
-    style.getPropertyValue(name).trim() || fallback;
+const LIGHT_THEME: ChartThemeColors = {
+  background: '#ffffff',
+  text: '#1a1a2e',
+  grid: 'rgba(0, 0, 0, 0.08)',
+  border: 'rgba(0, 0, 0, 0.12)',
+  crosshair: '#6b7280',
+  up: '#059669',
+  down: '#dc2626',
+  primary: '#6366f1',
+  warning: '#d97706',
+  destructive: '#dc2626',
+};
 
-  return {
-    background: read('--card', 'oklch(0.19 0.045 275)'),
-    text: read('--foreground', 'oklch(0.96 0.01 265)'),
-    grid: read('--border', 'oklch(1 0 0 / 8%)'),
-    border: read('--border-strong', 'oklch(1 0 0 / 14%)'),
-    crosshair: read('--muted-foreground', 'oklch(0.7 0.03 265)'),
-    up: read('--success', 'oklch(0.72 0.19 155)'),
-    down: read('--destructive', 'oklch(0.62 0.24 25)'),
-    primary: read('--color-primary', 'oklch(0.62 0.22 275)'),
-    warning: read('--warning', 'oklch(0.78 0.16 75)'),
-    destructive: read('--destructive', 'oklch(0.62 0.24 25)'),
-  };
-}
-
-function defaultChartTheme() {
-  return {
-    background: 'oklch(0.19 0.045 275)',
-    text: 'oklch(0.96 0.01 265)',
-    grid: 'oklch(1 0 0 / 8%)',
-    border: 'oklch(1 0 0 / 14%)',
-    crosshair: 'oklch(0.7 0.03 265)',
-    up: 'oklch(0.72 0.19 155)',
-    down: 'oklch(0.62 0.24 25)',
-    primary: 'oklch(0.62 0.22 275)',
-    warning: 'oklch(0.78 0.16 75)',
-    destructive: 'oklch(0.62 0.24 25)',
-  };
+/** Chart colors as hex/rgba — lightweight-charts cannot parse oklch CSS variables. */
+export function getChartTheme(): ChartThemeColors {
+  if (typeof document === 'undefined') return DARK_THEME;
+  return document.documentElement.classList.contains('dark') ? DARK_THEME : LIGHT_THEME;
 }
 
 export function buildChartOptions(theme = getChartTheme()) {

@@ -20,6 +20,9 @@ import {
 } from '../lib/chart-theme';
 import { Button } from './ui/Button';
 
+const EMPTY_PRICE_LINES: PriceLineOverlay[] = [];
+const EMPTY_MARKERS: ChartMarkerInput[] = [];
+
 export type PriceLineOverlay = {
   price: number;
   title: string;
@@ -71,8 +74,8 @@ export function PriceChart({
   candles,
   title,
   subtitle,
-  priceLines = [],
-  markers = [],
+  priceLines = EMPTY_PRICE_LINES,
+  markers = EMPTY_MARKERS,
   height = 320,
   showExport = true,
   exportFilename = 'price-chart',
@@ -142,33 +145,37 @@ export function PriceChart({
     const chart = chartRef.current;
     if (!series || !chart || candles.length === 0) return;
 
-    const theme = getChartTheme();
-    series.setData(toSeriesData(candles));
+    try {
+      const theme = getChartTheme();
+      series.setData(toSeriesData(candles));
 
-    for (const line of priceLineRefs.current) {
-      series.removePriceLine(line);
+      for (const line of priceLineRefs.current) {
+        series.removePriceLine(line);
+      }
+      priceLineRefs.current = [];
+
+      for (const line of priceLines) {
+        const priceLine = series.createPriceLine({
+          price: line.price,
+          title: line.title,
+          color: line.color ?? theme.primary,
+          lineWidth: 2,
+          lineStyle: 2,
+          axisLabelVisible: true,
+        });
+        priceLineRefs.current.push(priceLine);
+      }
+
+      if (markers.length > 0) {
+        markersPluginRef.current?.setMarkers(toSeriesMarkers(markers));
+      } else {
+        markersPluginRef.current?.setMarkers([]);
+      }
+
+      chart.timeScale().fitContent();
+    } catch (err) {
+      console.error('PriceChart update failed:', err);
     }
-    priceLineRefs.current = [];
-
-    for (const line of priceLines) {
-      const priceLine = series.createPriceLine({
-        price: line.price,
-        title: line.title,
-        color: line.color ?? theme.primary,
-        lineWidth: 2,
-        lineStyle: 2,
-        axisLabelVisible: true,
-      });
-      priceLineRefs.current.push(priceLine);
-    }
-
-    if (markers.length > 0) {
-      markersPluginRef.current?.setMarkers(toSeriesMarkers(markers));
-    } else {
-      markersPluginRef.current?.setMarkers([]);
-    }
-
-    chart.timeScale().fitContent();
   }, [candles, priceLines, markers]);
 
   const handleExport = () => {

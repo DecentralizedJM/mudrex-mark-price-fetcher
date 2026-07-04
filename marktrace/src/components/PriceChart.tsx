@@ -44,6 +44,7 @@ export interface PriceChartProps {
   subtitle?: string;
   priceLines?: PriceLineOverlay[];
   markers?: ChartMarkerInput[];
+  legend?: { color: string; label: string }[];
   height?: number;
   showExport?: boolean;
   exportFilename?: string;
@@ -77,6 +78,7 @@ export function PriceChart({
   subtitle,
   priceLines = EMPTY_PRICE_LINES,
   markers = EMPTY_MARKERS,
+  legend,
   height = 320,
   showExport = true,
   exportFilename = 'price-chart',
@@ -237,6 +239,20 @@ export function PriceChart({
         role="img"
         aria-label={title ?? 'Price candlestick chart'}
       />
+      {legend && legend.length > 0 && (
+        <div className="flex flex-wrap gap-x-4 gap-y-2 pt-1">
+          {legend.map((item) => (
+            <div key={item.label} className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: item.color }}
+                aria-hidden
+              />
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -8,8 +8,8 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { DateTime24Input } from './ui/DateTime24Input';
-import { PriceChart } from './PriceChart';
-import { formatEpoch, formatEpochForInput } from '../lib/time';
+import { LiquidationVisualPanel } from './LiquidationVisualPanel';
+import { formatEpochForInput } from '../lib/time';
 import { formatPrice } from '../lib/csv';
 import type { MarkCandle, TimezoneId } from '../lib/types';
 
@@ -164,14 +164,14 @@ export function LiquidationCheck() {
     if (Number.isFinite(entry) && entry > 0) {
       priceLines.push({
         price: entry,
-        title: 'Entry',
+        title: `Entry ${formatPrice(entry)}`,
         color: theme.primary,
       });
     }
     if (Number.isFinite(liq) && liq > 0) {
       priceLines.push({
         price: liq,
-        title: 'Liquidation',
+        title: `Liq ${formatPrice(liq)}`,
         color: theme.destructive,
       });
     }
@@ -350,6 +350,27 @@ export function LiquidationCheck() {
 
       {status === 'result' && result && (
         <div className="space-y-4">
+          {result.markCandles &&
+            result.markCandles.length > 0 &&
+            (result.kind === 'hit' || result.kind === 'miss') && (
+              <LiquidationVisualPanel
+                side={side}
+                symbol={symbol}
+                leverage={leverage}
+                entryPrice={Number(entryPrice)}
+                liqPrice={Number(liqPrice)}
+                liqTime={liqTime}
+                timezone={timezone}
+                kind={result.kind}
+                extremeMark={result.extremeMark}
+                extremeTime={result.extremeTime}
+                markAtReport={result.markAtReport}
+                candles={chartCandles}
+                priceLines={chartOverlays.priceLines}
+                markers={chartOverlays.markers}
+              />
+            )}
+
           <div
             className={`animate-in rounded-xl border p-6 ${
               result.kind === 'hit'
@@ -405,34 +426,11 @@ export function LiquidationCheck() {
                         {result.asset.minLeverage}x to {result.asset.maxLeverage}x
                       </dd>
                     </div>
-                    {result.extremeMark !== undefined && result.extremeTime !== undefined && (
-                      <div className="sm:col-span-2">
-                        <dt className="text-muted-foreground">
-                          Extreme mark in window
-                        </dt>
-                        <dd className="font-medium text-foreground">
-                          {formatPrice(result.extremeMark)} at{' '}
-                          {formatEpoch(result.extremeTime, timezone)}
-                        </dd>
-                      </div>
-                    )}
                   </dl>
                 )}
               </div>
             </div>
           </div>
-
-          {result.markCandles && result.markCandles.length > 0 && (
-            <PriceChart
-              candles={chartCandles}
-              title="Mark price (±15 min window)"
-              subtitle="1-minute Mudrex mark-kline candles with entry, liquidation, and key times."
-              priceLines={chartOverlays.priceLines}
-              markers={chartOverlays.markers}
-              exportFilename={`liquidation-${symbol.replace('/', '-') || 'chart'}`}
-              className="animate-in"
-            />
-          )}
 
           {result.analysis && (
             <div className="animate-in surface-panel rounded-xl p-5">

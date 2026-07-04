@@ -8,6 +8,7 @@ import {
   type TimezoneId,
 } from '../lib/types';
 import { Button } from './ui/Button';
+import { DateTime24Input } from './ui/DateTime24Input';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 
@@ -65,7 +66,7 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6 items-end">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-8 items-end">
         <div ref={wrapperRef} className="relative sm:col-span-2 lg:col-span-2">
           <Input
             label="Symbol"
@@ -97,25 +98,21 @@ export function LookupForm({ params, onChange, onSubmit, loading }: LookupFormPr
           )}
         </div>
 
-        <div className="sm:col-span-1 lg:col-span-1">
-          <Input
+        <div className="sm:col-span-2 lg:col-span-2">
+          <DateTime24Input
             label="Start date & time"
-            type="datetime-local"
             value={params.startTime}
-            onChange={(e) => update('startTime', e.target.value)}
+            onChange={(value) => update('startTime', value)}
             required
-            className="w-full"
           />
         </div>
 
-        <div className="sm:col-span-1 lg:col-span-1">
-          <Input
+        <div className="sm:col-span-2 lg:col-span-2">
+          <DateTime24Input
             label="End date & time"
-            type="datetime-local"
             value={params.endTime}
-            onChange={(e) => update('endTime', e.target.value)}
+            onChange={(value) => update('endTime', value)}
             required
-            className="w-full"
           />
         </div>
 

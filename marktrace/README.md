@@ -1,6 +1,6 @@
 # PriceFetcher
 
-**Mudrex LTP & Mark Price Lookup**: an internal, public (no-auth) support dashboard for looking up historical Last Traded Price (LTP) and Mark Price data around incident timestamps.
+**Mudrex LTP & Mark Price Lookup** — an internal, public (no-auth) support dashboard for looking up historical Last Traded Price (LTP) and Mark Price data around incident timestamps.
 
 Built for Mudrex support staff who need self-serve access to price data without API keys, terminal commands, or epoch math.
 
@@ -33,32 +33,26 @@ Deploy from the **repository root** (not this subfolder). The root `Dockerfile` 
 
 1. Connect this repo to Railway.
 2. Railway uses the root `Dockerfile` automatically.
-3. No login on the public support UI. Optional secrets:
+3. No secrets or env vars required for basic operation.
 
-- `MUDREX_API_KEY`: server-only; required for Liquidation Check
-- `ADMIN_EMAIL` / `ADMIN_PASSWORD`: admin dashboard
+Optional rate limits (set in Railway variables):
 
-Optional rate limits (per IP):
-
-- `RATE_LIMIT_WINDOW_MS`: default `900000` (15 min)
-- `RATE_LIMIT_MAX`: default `60` general requests
-- `RATE_LIMIT_API_MAX`: default `20` price lookups
-- `RATE_LIMIT_LIQ_MAX`: default `10` liquidation checks
-
-Hardening: small JSON body limit (`16kb`), security headers, no `X-Powered-By`, per-IP rate limits on expensive routes.
-
-### Liquidation Check (Mudrex source of truth)
-
-The **Liquidation Check** tab validates agent-entered side, leverage, entry, liquidation price, and time against Mudrex:
-
-1. **Asset specs**: `GET /fapi/v1/futures/{symbol}?is_symbol` (min/max leverage, price bounds, price step)
-2. **Mark reach**: public `mark-kline` around the reported time (±15 minutes, 1m candles)
-
-Requires a server-side Mudrex API secret:
-
-- `MUDREX_API_KEY`: trading API secret (`X-Authentication` header). Used only on the server; never exposed to the browser.
-
-If the asset is no longer listed but historical mark data exists, the check still runs and labels the verdict as historical-only.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RATE_LIMIT_WINDOW_MS` | `900000` | Rate limit window (15 min) |
+| `RATE_LIMIT_MAX` | `120` | General requests per IP per window |
+| `RATE_LIMIT_API_MAX` | `30` | Price fetch requests per IP per window |
+| `MUDREX_FETCH_TIMEOUT_MS` | `8000` | Upstream Mudrex HTTP timeout (ms) |
+| `CSP_ENFORCE` | `false` | Set `true` to enforce CSP (default is report-only) |
+| `ADMIN_EMAIL` | — | Admin dashboard login email |
+| `ADMIN_PASSWORD` | — | Admin dashboard login password |
+| `SESSION_SECRET` | falls back to `ADMIN_PASSWORD` | HMAC secret for admin session cookies |
+| `ADMIN_LOGIN_RATE_LIMIT_MAX` | `8` | Login attempts per IP per window |
+| `USAGE_MAX_EVENTS` | `100000` | Max usage events kept in memory |
+| `USAGE_RETENTION_DAYS` | `90` | Drop usage events older than this on load |
+| `USAGE_DATA_DIR` | `/data` in production, `./data` locally | Directory for `usage-events.jsonl` |
+| `IP_HASH_SECRET` | falls back to `SESSION_SECRET` / `ADMIN_PASSWORD` | HMAC key for client IP hashing (DPDP) |
+| `MUDREX_API_KEY` | — | Required for liquidation asset validation |
 
 ### Admin usage dashboard
 
@@ -66,19 +60,11 @@ The public dashboard has **no login**. Usage is tracked silently (page loads, pr
 
 A separate admin app is available at **`/admin`** (e.g. `https://pricefetch.up.railway.app/admin`).
 
-Set these Railway variables:
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in Railway.
 
-- `ADMIN_EMAIL`: bootstrap admin email
-- `ADMIN_PASSWORD`: bootstrap admin password
+The admin dashboard shows summary stats, recent activity (filterable), per-IP breakdown with last used, and failed fetches. Client IPs are stored as HMAC digests (DPDP). Events persist to `usage-events.jsonl` under `USAGE_DATA_DIR` and are pruned by `USAGE_RETENTION_DAYS`.
 
-The admin dashboard shows summary stats, recent activity (filterable), per-IP breakdown with last used, and failed fetches. Events are persisted to disk (JSONL, last 100000) and survive process restarts.
-
-Optional:
-
-- `USAGE_MAX_EVENTS`: max events retained (default `100000`)
-- `USAGE_EVENTS_FILE`: path to the events file (default `data/usage-events.jsonl`)
-
-On Railway, mount a persistent volume (e.g. at `/data`) and set `USAGE_EVENTS_FILE=/data/usage-events.jsonl` so events survive redeploys.
+**CSP:** Content-Security-Policy ships in **report-only** mode by default. Verify `/` and `/admin` in the browser console, then set `CSP_ENFORCE=true` to enforce.
 
 Local dev: main app at [http://localhost:5173](http://localhost:5173), admin at [http://localhost:5173/admin.html](http://localhost:5173/admin.html) (production serves `/admin`).
 
@@ -90,18 +76,18 @@ Local dev: main app at [http://localhost:5173](http://localhost:5173), admin at 
 4. Click **Fetch prices** to load LTP and Mark candles side by side.
 5. Review summary, analysis, and **Download CSV** for tickets.
 
-Invalid or unlisted symbols show a clear error with suggestions: not a generic “no data” message.
+Invalid or unlisted symbols show a clear error with suggestions — not a generic “no data” message.
 
 ## API
 
 Price lookups go through the app server (`POST /api/prices`) with rate limiting. The server calls Mudrex public FAPI v1 Price REST endpoints:
 
-- `GET https://trade.mudrex.com/fapi/v1/price/kline`: LTP candles
-- `GET https://trade.mudrex.com/fapi/v1/price/mark-kline`: Mark candles
+- `GET https://trade.mudrex.com/fapi/v1/price/kline` — LTP candles
+- `GET https://trade.mudrex.com/fapi/v1/price/mark-kline` — Mark candles
 
 Query params: `assets`, `aggregation`, `start_time`, `end_time` (epoch seconds UTC).
 
-Listed symbols are loaded from `public/all-futures-symbols.json`: update this file to expand validation coverage.
+Listed symbols are loaded from `public/all-futures-symbols.json` — update this file to expand validation coverage.
 
 ## Manual QA scenarios
 

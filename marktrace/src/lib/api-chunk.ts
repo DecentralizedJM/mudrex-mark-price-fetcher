@@ -1,3 +1,4 @@
+import { fetchWithResilience } from './mudrex-fetch';
 import type { Aggregation } from './types';
 
 export const MAX_CANDLES = 1440;
@@ -52,7 +53,7 @@ async function fetchEndpoint(
     end_time: String(endTime),
   });
 
-  const response = await fetch(url);
+  const response = await fetchWithResilience(url);
   const json = (await response.json()) as ApiEnvelope<KlineResponse>;
 
   if (!json.success) {

@@ -64,7 +64,9 @@ If the asset is no longer listed but historical mark data exists, the check stil
 
 The public dashboard has **no login**. Usage is tracked silently (page loads, price fetches, CSV downloads, rate limits).
 
-A separate admin app is available at **`/admin`** (e.g. `https://pricefetch.up.railway.app/admin`).
+A separate admin app is available at **`/admin`** (e.g. `https://mudrex-mark-price-fetcher-production.up.railway.app/admin`).
+
+**Production URL:** https://mudrex-mark-price-fetcher-production.up.railway.app
 
 Set these Railway variables:
 

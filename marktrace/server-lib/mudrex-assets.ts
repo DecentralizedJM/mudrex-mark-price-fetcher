@@ -1,3 +1,5 @@
+import { fetchWithResilience, MudrexFetchError } from '../src/lib/mudrex-fetch.ts';
+
 const FUTURES_BASE = 'https://trade.mudrex.com/fapi/v1/futures';
 
 export interface MudrexAsset {
@@ -50,9 +52,17 @@ export async function fetchAssetBySymbol(normalizedSymbol: string): Promise<Mudr
   }
 
   const compact = toCompactSymbol(normalizedSymbol);
-  const response = await fetch(`${FUTURES_BASE}/${encodeURIComponent(compact)}?is_symbol`, {
-    headers: { 'X-Authentication': apiKey },
-  });
+  let response: Response;
+  try {
+    response = await fetchWithResilience(`${FUTURES_BASE}/${encodeURIComponent(compact)}?is_symbol`, {
+      headers: { 'X-Authentication': apiKey },
+    });
+  } catch (err) {
+    if (err instanceof MudrexFetchError && err.status === 404) {
+      return null;
+    }
+    throw err;
+  }
 
   const json = (await response.json()) as ApiEnvelope<MudrexAsset>;
 

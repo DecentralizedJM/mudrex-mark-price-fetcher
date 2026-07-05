@@ -11,6 +11,15 @@ import {
   setAdminSession,
   validateAdminCredentials,
 } from './server-lib/admin-auth.ts';
+import { runLiquidationCheck } from './server-lib/liquidation-check.ts';
+import { applySecurityHeaders } from './server-lib/security-headers.ts';
+import {
+  adminLoginSchema,
+  formatZodError,
+  liquidationCheckSchema,
+  lookupParamsSchema,
+  usageTrackSchema,
+} from './server-lib/validation-schemas.ts';
 import { fetchPriceData } from './src/lib/api.ts';
 import { setListedSymbols } from './src/lib/symbols.ts';
 import type { LookupParams } from './src/lib/types.ts';
@@ -22,10 +31,6 @@ import {
   getUsageStats,
   recordUsageEvent,
 } from './server-lib/usage-tracker.ts';
-import {
-  runLiquidationCheck,
-  type LiquidationCheckInput,
-} from './server-lib/liquidation-check.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,22 +48,13 @@ try {
 }
 
 const app = express();
-app.disable('x-powered-by');
 app.set('trust proxy', 1);
-app.use((_req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Referrer-Policy', 'no-referrer');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
-  next();
-});
+applySecurityHeaders(app);
 app.use(express.json({ limit: '16kb' }));
 
 const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
-const generalMax = Number(process.env.RATE_LIMIT_MAX) || 60;
-const apiMax = Number(process.env.RATE_LIMIT_API_MAX) || 20;
-const liqMax = Number(process.env.RATE_LIMIT_LIQ_MAX) || 10;
+const generalMax = Number(process.env.RATE_LIMIT_MAX) || 120;
+const apiMax = Number(process.env.RATE_LIMIT_API_MAX) || 30;
 
 const generalLimiter = rateLimit({
   windowMs,
@@ -86,29 +82,19 @@ const apiLimiter = rateLimit({
   },
 });
 
-const liquidationLimiter = rateLimit({
+const adminLoginLimiter = rateLimit({
   windowMs,
-  max: liqMax,
+  max: Number(process.env.ADMIN_LOGIN_RATE_LIMIT_MAX) || 8,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req, res) => {
-    recordUsageEvent({
-      ...getRequestMeta(req),
-      action: 'rate_limited',
-      status: 'rate_limited',
-      errorMessage: 'Liquidation check rate limit reached.',
-    });
-    res.status(429).json({
-      message: 'Liquidation check rate limit reached. Please wait before trying again.',
-    });
-  },
+  message: { message: 'Too many login attempts. Please wait and try again.' },
 });
+
+app.use(generalLimiter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
-
-app.use(generalLimiter);
 
 app.get('/api/symbols', (_req, res) => {
   try {
@@ -121,70 +107,57 @@ app.get('/api/symbols', (_req, res) => {
 });
 
 app.post('/api/usage/track', (req, res) => {
-  const body = req.body as Record<string, unknown>;
-  const action = body.action;
-
-  if (action !== 'page_load' && action !== 'csv_download') {
-    res.status(400).json({ message: 'Invalid tracking action.' });
+  const parsed = usageTrackSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: formatZodError(parsed.error) });
     return;
   }
 
+  const body = parsed.data;
   recordUsageEvent({
     ...getRequestMeta(req),
-    action,
+    action: body.action,
     status: 'success',
-    symbol: typeof body.symbol === 'string' ? body.symbol : undefined,
-    startTime: typeof body.startTime === 'string' ? body.startTime : undefined,
-    endTime: typeof body.endTime === 'string' ? body.endTime : undefined,
-    timezone: typeof body.timezone === 'string' ? body.timezone : undefined,
-    aggregation: typeof body.aggregation === 'string' ? body.aggregation : undefined,
-    rowCount: typeof body.rowCount === 'number' ? body.rowCount : undefined,
-    csvFilename: typeof body.csvFilename === 'string' ? body.csvFilename : undefined,
+    symbol: body.symbol,
+    startTime: body.startTime,
+    endTime: body.endTime,
+    timezone: body.timezone,
+    aggregation: body.aggregation,
+    rowCount: body.rowCount,
+    csvFilename: body.csvFilename,
   });
 
   res.json({ ok: true });
 });
 
-app.post('/api/liquidation/check', liquidationLimiter, async (req, res) => {
-  const started = Date.now();
-  const meta = getRequestMeta(req);
-  const body = req.body as LiquidationCheckInput;
-  const result = await runLiquidationCheck(body);
-  const durationMs = Date.now() - started;
-
-  recordUsageEvent({
-    ...meta,
-    action: 'price_fetch',
-    status: result.kind === 'error' ? 'validation_error' : 'success',
-    symbol: typeof body.symbol === 'string' ? body.symbol : undefined,
-    startTime: typeof body.liquidationTime === 'string' ? body.liquidationTime : undefined,
-    endTime: typeof body.liquidationTime === 'string' ? body.liquidationTime : undefined,
-    timezone: typeof body.timezone === 'string' ? body.timezone : undefined,
-    aggregation: '1m',
-    durationMs,
-    errorMessage: result.kind === 'error' ? result.message : undefined,
-  });
-
-  if (result.kind === 'error') {
-    res.status(400).json(result);
+app.post('/api/prices', apiLimiter, async (req, res) => {
+  const parsed = lookupParamsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: formatZodError(parsed.error) });
     return;
   }
 
-  res.json(result);
-});
-
-app.post('/api/prices', apiLimiter, async (req, res) => {
   const started = Date.now();
   const meta = getRequestMeta(req);
-  const params = req.body as LookupParams;
+  const params = parsed.data as LookupParams;
   const result = await fetchPriceData(params);
   const durationMs = Date.now() - started;
 
   if ('message' in result && !('rows' in result)) {
+    const isValidation =
+      result.message.includes('required') ||
+      result.message.includes('Invalid') ||
+      result.message.includes('cannot exceed') ||
+      result.message.includes('must be after') ||
+      result.message.includes('too large') ||
+      result.message.includes('not a listed') ||
+      result.message.includes('no recent kline') ||
+      result.message.includes('No price data');
+
     recordUsageEvent({
       ...meta,
       action: 'price_fetch',
-      status: 'validation_error',
+      status: isValidation ? 'validation_error' : 'api_error',
       symbol: params.symbol,
       startTime: params.startTime,
       endTime: params.endTime,
@@ -214,18 +187,30 @@ app.post('/api/prices', apiLimiter, async (req, res) => {
   res.json(result);
 });
 
-app.post('/admin/api/login', (req, res) => {
+app.post('/api/liquidation/check', apiLimiter, async (req, res) => {
+  const parsed = liquidationCheckSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: formatZodError(parsed.error) });
+    return;
+  }
+
+  const result = await runLiquidationCheck(parsed.data);
+  res.json(result);
+});
+
+app.post('/admin/api/login', adminLoginLimiter, (req, res) => {
   if (!isAdminConfigured()) {
     res.status(503).json({ message: 'Admin is not configured. Set ADMIN_EMAIL and ADMIN_PASSWORD.' });
     return;
   }
 
-  const { email, password } = req.body as { email?: string; password?: string };
-  if (!email || !password) {
-    res.status(400).json({ message: 'Email and password are required.' });
+  const parsed = adminLoginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ message: formatZodError(parsed.error) });
     return;
   }
 
+  const { email, password } = parsed.data;
   if (validateAdminCredentials(email, password)) {
     setAdminSession(res, email.trim());
     res.json({ ok: true, email: email.trim() });

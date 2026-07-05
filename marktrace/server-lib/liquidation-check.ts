@@ -1,4 +1,5 @@
 import { fetchCandlesChunked } from '../src/lib/api-chunk.ts';
+import { MudrexFetchError } from '../src/lib/mudrex-fetch.ts';
 import { formatPct, formatPrice } from '../src/lib/csv.ts';
 import { normalizeSymbol } from '../src/lib/symbols.ts';
 import { formatEpoch, parseLocalDateTime } from '../src/lib/time.ts';
@@ -372,6 +373,16 @@ export async function runLiquidationCheck(
   try {
     asset = await fetchAssetBySymbol(normalizedSymbol);
   } catch (err) {
+    if (err instanceof MudrexFetchError || (err instanceof Error && err.name === 'AbortError')) {
+      console.error('[runLiquidationCheck] Asset fetch failed', {
+        symbol: normalizedSymbol,
+        error: err instanceof Error ? err.message : err,
+      });
+      return {
+        kind: 'error',
+        message: 'Unable to fetch data from Mudrex right now. Please try again in a moment.',
+      };
+    }
     return {
       kind: 'error',
       message: err instanceof Error ? err.message : 'Failed to load asset from Mudrex.',
@@ -406,9 +417,19 @@ export async function runLiquidationCheck(
       fetchCandlesChunked('kline', normalizedSymbol, '1m', windowStart, windowEnd),
     ]);
   } catch (err) {
+    if (err instanceof MudrexFetchError || (err instanceof Error && err.name === 'AbortError')) {
+      console.error('[runLiquidationCheck] Price fetch failed', {
+        symbol: normalizedSymbol,
+        error: err instanceof Error ? err.message : err,
+      });
+      return {
+        kind: 'error',
+        message: 'Unable to fetch data from Mudrex right now. Please try again in a moment.',
+      };
+    }
     return {
       kind: 'error',
-      message: err instanceof Error ? err.message : 'Failed to fetch Mudrex price data.',
+      message: 'Unable to fetch data from Mudrex right now. Please try again in a moment.',
     };
   }
 
@@ -470,8 +491,7 @@ export async function runLiquidationCheck(
     return { kind: 'error', message: 'No usable mark price candles returned by Mudrex.' };
   }
 
-  const hit =
-    input.side === 'Long' ? extremeMark <= liquidationPrice : extremeMark >= liquidationPrice;
+  const hit = computeLiquidationHit(input.side, extremeMark, liquidationPrice);
   const kind = hit ? 'hit' : 'miss';
   const timeLabel = formatEpoch(extremeTime, input.timezone);
   const expectedDir = input.side === 'Long' ? 'drop to or below' : 'rise to or above';
@@ -528,4 +548,14 @@ export async function runLiquidationCheck(
     analysis,
     message: `DID NOT REACH: The ${actualDir.toLowerCase()} Mudrex mark price in the window was ${formatPrice(extremeMark)} at ${timeLabel}. It did not ${expectedDir} the liquidation price of ${formatPrice(liquidationPrice)}.${historicalNote}`,
   };
+}
+
+export { structuralPriceError, validateCrossInWindow, markWindowBounds };
+
+export function computeLiquidationHit(
+  side: LiquidationSide,
+  extremeMark: number,
+  liquidationPrice: number,
+): boolean {
+  return side === 'Long' ? extremeMark <= liquidationPrice : extremeMark >= liquidationPrice;
 }

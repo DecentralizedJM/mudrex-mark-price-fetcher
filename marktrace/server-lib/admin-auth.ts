@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 
 const SESSION_COOKIE = 'pf_admin_session';
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 interface SessionPayload {
   email: string;
@@ -15,6 +16,10 @@ function getAdminEmail(): string | undefined {
 
 function getAdminPassword(): string | undefined {
   return process.env.ADMIN_PASSWORD;
+}
+
+function getSessionSecret(): string | undefined {
+  return process.env.SESSION_SECRET?.trim() || getAdminPassword();
 }
 
 function signPayload(payload: string, secret: string): string {
@@ -56,6 +61,11 @@ function parseCookies(header: string | undefined): Record<string, string> {
   }, {});
 }
 
+function cookieFlags(maxAgeSeconds: number): string {
+  const secure = isProduction ? '; Secure' : '';
+  return `Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure}`;
+}
+
 export function isAdminConfigured(): boolean {
   return Boolean(getAdminEmail() && getAdminPassword());
 }
@@ -80,7 +90,7 @@ export function validateAdminCredentials(email: string, password: string): boole
 }
 
 export function setAdminSession(res: Response, email: string): void {
-  const secret = getAdminPassword();
+  const secret = getSessionSecret();
   if (!secret) return;
 
   const token = encodeSession(
@@ -90,19 +100,16 @@ export function setAdminSession(res: Response, email: string): void {
 
   res.setHeader(
     'Set-Cookie',
-    `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(SESSION_MAX_AGE_MS / 1000)}`,
+    `${SESSION_COOKIE}=${encodeURIComponent(token)}; ${cookieFlags(Math.floor(SESSION_MAX_AGE_MS / 1000))}`,
   );
 }
 
 export function clearAdminSession(res: Response): void {
-  res.setHeader(
-    'Set-Cookie',
-    `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`,
-  );
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; ${cookieFlags(0)}`);
 }
 
 export function getAdminSession(req: Request): SessionPayload | null {
-  const secret = getAdminPassword();
+  const secret = getSessionSecret();
   if (!secret) return null;
 
   const cookies = parseCookies(req.headers.cookie);

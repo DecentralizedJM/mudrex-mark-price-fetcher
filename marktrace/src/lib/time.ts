@@ -3,8 +3,7 @@ import { aggregationToSeconds } from './api-chunk';
 import type { Aggregation, TimezoneId } from './types';
 
 export function parseLocalDateTime(datetimeLocal: string, timezone: TimezoneId): Date {
-  const parts = datetimeLocal.split(':');
-  const iso = parts.length === 2 ? `${datetimeLocal}:00` : datetimeLocal;
+  const iso = `${datetimeLocal}:00`;
   return fromZonedTime(iso, timezone);
 }
 

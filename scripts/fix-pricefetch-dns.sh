@@ -2,8 +2,8 @@
 # Fix ERR_NAME_NOT_RESOLVED for PriceFetcher when Twingate (or similar VPN) blocks Railway DNS.
 set -euo pipefail
 
-HOST="mudrex-mark-price-fetcher-production.up.railway.app"
-IP="69.46.46.125"
+HOST="pricefetch.up.railway.app"
+IP="69.46.46.127"
 URL="https://${HOST}"
 
 echo "Setting Wi-Fi DNS to Google + Cloudflare..."

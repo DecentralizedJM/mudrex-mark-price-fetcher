@@ -22,7 +22,7 @@ npm start        # production (Railway)
 
 This repo includes a root `Dockerfile` — connect the repo to Railway and deploy from the **repository root**. No env vars required.
 
-**Live app:** https://mudrex-mark-price-fetcher-production.up.railway.app
+**Live app:** https://pricefetch.up.railway.app
 
 ### DNS / VPN troubleshooting
 

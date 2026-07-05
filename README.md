@@ -24,6 +24,14 @@ This repo includes a root `Dockerfile` — connect the repo to Railway and deplo
 
 **Live app:** https://mudrex-mark-price-fetcher-production.up.railway.app
 
+### DNS / VPN troubleshooting
+
+If you see `ERR_NAME_NOT_RESOLVED` or `DNS_PROBE_POSSIBLE`, **Twingate or Tailscale** is likely hijacking DNS and blocking `*.up.railway.app` lookups.
+
+1. Quit **Twingate** from the menu bar (or disconnect the VPN).
+2. Set Wi‑Fi DNS to `8.8.8.8` and `1.1.1.1` (System Settings → Network → Wi‑Fi → DNS).
+3. Or run from repo root: `bash scripts/fix-pricefetch-dns.sh` (prompts for sudo to flush cache / update hosts).
+
 Optional rate-limit tuning:
 
 | Variable | Default | Description |

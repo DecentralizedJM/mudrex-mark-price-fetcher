@@ -113,3 +113,19 @@ export function filterSymbols(symbols: string[], query: string, limit = 8): stri
     .slice(0, limit);
 }
 
+export async function validateListedSymbol(symbol: string): Promise<string | null> {
+  let normalized: string;
+  try {
+    normalized = normalizeSymbol(symbol);
+  } catch (err) {
+    return err instanceof Error ? err.message : 'Invalid symbol format.';
+  }
+
+  const listed = await loadSymbolSuggestions();
+  if (!isSymbolListed(normalized, listed)) {
+    const suggestions = suggestSimilarSymbols(normalized, listed);
+    return formatUnlistedSymbolError(normalized, suggestions);
+  }
+
+  return null;
+}

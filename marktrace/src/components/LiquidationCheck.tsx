@@ -614,7 +614,7 @@ export function LiquidationCheck() {
                       {result.peerResults.map((peer) => (
                           <tr key={peer.exchange} className="border-b border-border last:border-0">
                             <td className="px-3 py-2 font-medium text-foreground">
-                              <PeerExchangeBrand id={peer.exchange} />
+                              <PeerExchangeBrand id={peer.exchange} compact />
                             </td>
                             <td className="px-3 py-2 text-muted-foreground">
                               {peer.status === 'ok'

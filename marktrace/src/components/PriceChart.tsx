@@ -19,6 +19,8 @@ import {
   buildChartOptions,
   getChartTheme,
 } from '../lib/chart-theme';
+import { epochToChartTime, timezoneShortLabel } from '../lib/time';
+import type { TimezoneId } from '../lib/types';
 import { useResponsiveChartHeight } from '../hooks/useMediaQuery';
 import { Button } from './ui/Button';
 
@@ -43,6 +45,7 @@ export interface PriceChartProps {
   candles: ChartCandle[];
   title?: string;
   subtitle?: string;
+  timezone?: TimezoneId;
   priceLines?: PriceLineOverlay[];
   markers?: ChartMarkerInput[];
   legend?: { color: string; label: string }[];
@@ -52,9 +55,9 @@ export interface PriceChartProps {
   className?: string;
 }
 
-function toSeriesData(candles: ChartCandle[]) {
+function toSeriesData(candles: ChartCandle[], timezone: TimezoneId) {
   return candles.map((c) => ({
-    time: c.time as UTCTimestamp,
+    time: epochToChartTime(c.time, timezone) as UTCTimestamp,
     open: c.open,
     high: c.high,
     low: c.low,
@@ -62,10 +65,10 @@ function toSeriesData(candles: ChartCandle[]) {
   }));
 }
 
-function toSeriesMarkers(markers: ChartMarkerInput[]): SeriesMarker<Time>[] {
+function toSeriesMarkers(markers: ChartMarkerInput[], timezone: TimezoneId): SeriesMarker<Time>[] {
   const theme = getChartTheme();
   return markers.map((m) => ({
-    time: m.time as UTCTimestamp,
+    time: epochToChartTime(m.time, timezone) as UTCTimestamp,
     position: m.position ?? 'aboveBar',
     color: m.color ?? theme.primary,
     shape: m.shape ?? 'circle',
@@ -77,6 +80,7 @@ export function PriceChart({
   candles,
   title,
   subtitle,
+  timezone = 'Asia/Kolkata',
   priceLines = EMPTY_PRICE_LINES,
   markers = EMPTY_MARKERS,
   legend,
@@ -168,7 +172,7 @@ export function PriceChart({
           minMove: priceFormat.minMove,
         },
       });
-      series.setData(toSeriesData(candles));
+      series.setData(toSeriesData(candles, timezone));
 
       for (const line of priceLineRefs.current) {
         series.removePriceLine(line);
@@ -188,7 +192,7 @@ export function PriceChart({
       }
 
       if (markers.length > 0) {
-        markersPluginRef.current?.setMarkers(toSeriesMarkers(markers));
+        markersPluginRef.current?.setMarkers(toSeriesMarkers(markers, timezone));
       } else {
         markersPluginRef.current?.setMarkers([]);
       }
@@ -197,7 +201,7 @@ export function PriceChart({
     } catch (err) {
       console.error('PriceChart update failed:', err);
     }
-  }, [candles, priceLines, markers]);
+  }, [candles, priceLines, markers, timezone]);
 
   const handleExport = () => {
     const chart = chartRef.current;
@@ -209,6 +213,11 @@ export function PriceChart({
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
+
+  const tzLabel = timezoneShortLabel(timezone);
+  const resolvedSubtitle = subtitle
+    ? `${subtitle} Times shown in ${tzLabel}.`
+    : `Times shown in ${tzLabel}.`;
 
   if (candles.length === 0) {
     return (
@@ -228,9 +237,7 @@ export function PriceChart({
             {title && (
               <h4 className="text-sm font-semibold text-foreground">{title}</h4>
             )}
-            {subtitle && (
-              <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">{subtitle}</p>
-            )}
+            <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">{resolvedSubtitle}</p>
           </div>
           {showExport && (
             <Button variant="secondary" onClick={handleExport} className="w-full shrink-0 sm:w-auto">

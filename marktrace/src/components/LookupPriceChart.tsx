@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
 import { mergedRowsToChart, type ChartSeriesKind } from '../lib/chart-data';
-import type { MergedRow } from '../lib/types';
+import type { MergedRow, TimezoneId } from '../lib/types';
 import { PriceChart } from './PriceChart';
 
 interface LookupPriceChartProps {
   rows: MergedRow[];
   symbol: string;
+  timezone: TimezoneId;
 }
 
-export function LookupPriceChart({ rows, symbol }: LookupPriceChartProps) {
+export function LookupPriceChart({ rows, symbol, timezone }: LookupPriceChartProps) {
   const [series, setSeries] = useState<ChartSeriesKind>('mark');
 
   const candles = useMemo(() => mergedRowsToChart(rows, series), [rows, series]);
@@ -49,6 +50,7 @@ export function LookupPriceChart({ rows, symbol }: LookupPriceChartProps) {
         candles={candles}
         title={`${seriesLabel} candlesticks`}
         subtitle={`Mudrex ${series === 'mark' ? 'mark-kline' : 'kline'} data for the selected range.`}
+        timezone={timezone}
         exportFilename={`lookup-${series}-${symbol.replace('/', '-') || 'chart'}`}
       />
     </div>

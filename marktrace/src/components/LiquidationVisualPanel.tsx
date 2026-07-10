@@ -96,7 +96,7 @@ function crossingSummary(props: LiquidationVisualPanelProps): {
 
 export function LiquidationVisualPanel(props: LiquidationVisualPanelProps) {
   const theme = getChartTheme();
-  const { side, symbol, leverage, entryPrice, liqPrice, liqTime, kind, markAtReport } = props;
+  const { side, symbol, leverage, entryPrice, liqPrice, liqTime, timezone, kind, markAtReport } = props;
   const summary = crossingSummary(props);
   const reportedLabel = liqTime.replace('T', ' ');
 
@@ -180,6 +180,7 @@ export function LiquidationVisualPanel(props: LiquidationVisualPanelProps) {
         candles={props.candles}
         title="Mark price chart (±15 min)"
         subtitle="Purple = entry · Red = liquidation · Yellow arrow = reported time · Teal dot = extreme mark"
+        timezone={timezone}
         priceLines={props.priceLines}
         markers={props.markers}
         height={360}

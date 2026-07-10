@@ -174,7 +174,11 @@ export default function App() {
                 {hasResults && result && analysis && (
                   <>
                     <SummaryCards summary={result.summary} timezone={params.timezone} />
-                    <LookupPriceChart rows={result.rows} symbol={result.normalizedSymbol} />
+                    <LookupPriceChart
+                      rows={result.rows}
+                      symbol={result.normalizedSymbol}
+                      timezone={params.timezone}
+                    />
                     <AnalysisPanel analysis={analysis} />
                   </>
                 )}

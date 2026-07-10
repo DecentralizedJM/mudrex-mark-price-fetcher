@@ -56,3 +56,42 @@ export function estimateCandleCount(
 export function timezoneShortLabel(timezone: TimezoneId): string {
   return timezone === 'Asia/Kolkata' ? 'IST' : 'UTC';
 }
+
+/**
+ * Convert a real UTC epoch into a "chart time" for lightweight-charts.
+ * The library always formats timestamps as UTC, so we shift the value so its
+ * UTC wall-clock matches the selected timezone (e.g. IST).
+ */
+export function epochToChartTime(epoch: number, timezone: TimezoneId): number {
+  if (timezone === 'UTC') return epoch;
+
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    })
+      .formatToParts(new Date(epoch * 1000))
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, part.value]),
+  );
+
+  // Some engines emit "24" for midnight with hour12: false.
+  const hour = Number(parts.hour) % 24;
+
+  return Math.floor(
+    Date.UTC(
+      Number(parts.year),
+      Number(parts.month) - 1,
+      Number(parts.day),
+      hour,
+      Number(parts.minute),
+      Number(parts.second),
+    ) / 1000,
+  );
+}

@@ -13,10 +13,15 @@ type LogoConfig = {
   /** Display height inside the tile (px) */
   compactHeight: number;
   height: number;
-  /** Crop zoom for assets with excess padding (Delta) */
-  zoom?: number;
+  /** Use object-cover to crop excess padding (Delta) */
+  cover?: boolean;
   /** Wordmark-style logo — tile width follows image aspect */
   wide?: boolean;
+};
+
+const SQUARE_TILE = {
+  compact: { size: 22, mark: 16 },
+  regular: { size: 25, mark: 18 },
 };
 
 const LOGO_CONFIG: Record<PeerExchangeId, LogoConfig> = {
@@ -30,15 +35,15 @@ const LOGO_CONFIG: Record<PeerExchangeId, LogoConfig> = {
   binance: {
     src: '/exchanges/binance.png',
     aspect: 1,
-    compactHeight: 16,
-    height: 18,
+    compactHeight: SQUARE_TILE.compact.mark,
+    height: SQUARE_TILE.regular.mark,
   },
   delta: {
     src: '/exchanges/delta.png',
     aspect: 598 / 498,
-    compactHeight: 22,
-    height: 26,
-    zoom: 2.4,
+    compactHeight: 13,
+    height: 15,
+    cover: true,
   },
 };
 
@@ -67,7 +72,8 @@ function LogoTile({ id, compact }: { id: PeerExchangeId; compact: boolean }) {
     );
   }
 
-  const tileSize = markHeight + padY;
+  const tile = compact ? SQUARE_TILE.compact : SQUARE_TILE.regular;
+  const tileSize = cfg.cover ? tile.size : markHeight + padY;
 
   return (
     <span
@@ -78,12 +84,8 @@ function LogoTile({ id, compact }: { id: PeerExchangeId; compact: boolean }) {
         src={cfg.src}
         alt=""
         draggable={false}
-        className="block shrink-0 object-contain object-center"
-        style={
-          cfg.zoom
-            ? { height: markHeight, width: 'auto', transform: `scale(${cfg.zoom})` }
-            : { height: markHeight, width: markHeight }
-        }
+        className={`block shrink-0 object-center ${cfg.cover ? 'object-cover' : 'object-contain'}`}
+        style={{ height: markHeight, width: markHeight }}
       />
     </span>
   );

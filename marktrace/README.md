@@ -60,6 +60,20 @@ Requires a server-side Mudrex API secret:
 
 If the asset is no longer listed but historical mark data exists, the check still runs and labels the verdict as historical-only.
 
+#### Peer Exchange Check (optional)
+
+Enable **Peer Exchange Check** on the Liquidation Check form to compare Mudrex mark prices with peer exchanges in the same ±15 minute window (1m mark candles):
+
+| Exchange | Mark price API |
+|----------|----------------|
+| **Bybit** | `GET /v5/market/mark-price-kline` (linear USDT perps) |
+| **Binance** | `GET /fapi/v1/markPriceKlines` |
+| **Delta Exchange (India)** | `GET /v2/history/candles` with `MARK:BASEUSD` symbol |
+
+Select one or more peers (default: all three). The response includes a separate **Peer exchange analysis** section with a comparison table, rule-based narrative, and ticket-ready notes.
+
+Coinbase and CoinDCX are not included because they do not expose usable historical mark-price OHLC for perpetuals via public APIs.
+
 ### Admin usage dashboard
 
 The public dashboard has **no login**. Usage is tracked silently (page loads, price fetches, CSV downloads, rate limits).

@@ -4,11 +4,19 @@ import { normalizeSymbol } from '../src/lib/symbols.ts';
 import { formatEpoch, parseLocalDateTime } from '../src/lib/time.ts';
 import type { LtpCandle, MarkCandle, TimezoneId } from '../src/lib/types.ts';
 import {
+  fetchPeerExchangesMark,
+  PEER_EXCHANGE_LABELS,
+  type PeerExchangeId,
+  type PeerMarkResult,
+} from './peer-exchanges.ts';
+import {
   fetchAssetBySymbol,
   isMudrexApiConfigured,
   validateAgainstMudrexAsset,
   type MudrexAsset,
 } from './mudrex-assets.ts';
+
+export type { PeerExchangeId } from './peer-exchanges.ts';
 
 export type LiquidationSide = 'Long' | 'Short';
 
@@ -20,6 +28,8 @@ export interface LiquidationCheckInput {
   liquidationPrice: number | string;
   liquidationTime: string;
   timezone: TimezoneId;
+  /** Optional peer exchanges to compare mark price against (Bybit, Binance, Delta). */
+  peerExchanges?: PeerExchangeId[];
 }
 
 export interface LiquidationMovementAnalysis {
@@ -41,6 +51,8 @@ export interface LiquidationCheckResult {
   /** Mark klines for the ±15m liquidation window (1m candles). */
   markCandles?: MarkCandle[];
   analysis?: LiquidationMovementAnalysis;
+  peerResults?: PeerMarkResult[];
+  peerAnalysis?: LiquidationMovementAnalysis;
   asset?: {
     symbol: string;
     name: string;
@@ -308,6 +320,190 @@ function buildMovementAnalysis(input: {
   return { headline, paragraphs, bullets, agentReply };
 }
 
+function buildPeerExchangeAnalysis(input: {
+  kind: 'hit' | 'miss';
+  symbol: string;
+  side: LiquidationSide;
+  liquidationPrice: number;
+  mudrexExtremeMark: number;
+  mudrexMarkMovePct: number;
+  peerResults: PeerMarkResult[];
+}): LiquidationMovementAnalysis {
+  const { kind, symbol, side, liquidationPrice, mudrexExtremeMark, mudrexMarkMovePct, peerResults } =
+    input;
+
+  const okPeers = peerResults.filter((r): r is Extract<PeerMarkResult, { status: 'ok' }> => r.status === 'ok');
+  const unavailable = peerResults.filter((r) => r.status !== 'ok');
+
+  const extremeLabel = side === 'Long' ? 'lowest' : 'highest';
+  const mudrexAbsMove = Math.abs(mudrexMarkMovePct);
+
+  const headline =
+    okPeers.length === 0
+      ? `Peer exchange mark data was unavailable for ${symbol} in this window.`
+      : `Peer exchange mark comparison for ${symbol} (±15 min around reported liquidation).`;
+
+  const paragraphs: string[] = [];
+
+  if (okPeers.length === 0) {
+    paragraphs.push(
+      `Requested peer exchanges did not return usable mark-price candles for ${symbol} in the same window. This can mean the symbol is not listed on those venues or the APIs were temporarily unavailable.`,
+    );
+    for (const u of unavailable) {
+      paragraphs.push(
+        `${PEER_EXCHANGE_LABELS[u.exchange]}: ${u.message}`,
+      );
+    }
+  } else {
+    const peerMoveSummary = okPeers
+      .map(
+        (p) =>
+          `${PEER_EXCHANGE_LABELS[p.exchange]} ${p.markMovePct >= 0 ? '+' : ''}${p.markMovePct.toFixed(2)}%`,
+      )
+      .join('; ');
+
+    paragraphs.push(
+      `Mudrex mark moved ${mudrexMarkMovePct >= 0 ? '+' : ''}${mudrexMarkMovePct.toFixed(2)}% over the window (absolute ${mudrexAbsMove.toFixed(2)}%). Peer mark moves: ${peerMoveSummary}.`,
+    );
+
+    const peersCrossed = okPeers.filter((p) => p.crossedLiq);
+    const peersNotCrossed = okPeers.filter((p) => !p.crossedLiq);
+
+    if (kind === 'hit' && peersCrossed.length === 0 && peersNotCrossed.length > 0) {
+      paragraphs.push(
+        `Mudrex mark ${extremeLabel} ${formatPrice(mudrexExtremeMark)} reached the liquidation level ${formatPrice(liquidationPrice)}, but none of the available peer marks crossed that level in the same window. This suggests Mudrex-specific mark volatility was higher than on peer exchanges for this period.`,
+      );
+    } else if (kind === 'hit' && peersCrossed.length > 0) {
+      const names = peersCrossed.map((p) => PEER_EXCHANGE_LABELS[p.exchange]).join(', ');
+      paragraphs.push(
+        `Peer mark prices on ${names} also ${side === 'Long' ? 'reached at or below' : 'reached at or above'} the liquidation level ${formatPrice(liquidationPrice)} in the same window, supporting that a liquidation at this level was consistent with broader market mark movement.`,
+      );
+    } else if (kind === 'miss' && peersNotCrossed.length === okPeers.length) {
+      paragraphs.push(
+        `Mudrex and all available peer marks failed to reach the reported liquidation price ${formatPrice(liquidationPrice)} in this window, which supports that a liquidation at the reported level is unlikely.`,
+      );
+    } else if (kind === 'miss' && peersCrossed.length > 0) {
+      const names = peersCrossed.map((p) => PEER_EXCHANGE_LABELS[p.exchange]).join(', ');
+      paragraphs.push(
+        `Although Mudrex mark did not reach ${formatPrice(liquidationPrice)}, peer marks on ${names} did cross that level. The user may be comparing Mudrex liquidation rules to price action on other venues.`,
+      );
+    }
+
+    const peerAbsMoves = okPeers.map((p) => Math.abs(p.markMovePct));
+    const medianPeerAbs =
+      peerAbsMoves.length > 0
+        ? peerAbsMoves.sort((a, b) => a - b)[Math.floor(peerAbsMoves.length / 2)]
+        : 0;
+
+    if (okPeers.length > 0 && mudrexAbsMove > medianPeerAbs * 2 && medianPeerAbs > 0.05) {
+      paragraphs.push(
+        `Mudrex mark volatility (${mudrexAbsMove.toFixed(2)}% absolute window move) was materially larger than the median peer move (${medianPeerAbs.toFixed(2)}%), which may explain why the user saw different price behaviour on other exchanges.`,
+      );
+    }
+  }
+
+  for (const u of unavailable) {
+    if (okPeers.length > 0) {
+      paragraphs.push(
+        `${PEER_EXCHANGE_LABELS[u.exchange]}: ${u.message}`,
+      );
+    }
+  }
+
+  const bullets: string[] = [
+    `Mudrex window move: ${mudrexMarkMovePct >= 0 ? '+' : ''}${mudrexMarkMovePct.toFixed(2)}% · ${extremeLabel} mark: ${formatPrice(mudrexExtremeMark)}`,
+  ];
+
+  for (const p of okPeers) {
+    bullets.push(
+      `${PEER_EXCHANGE_LABELS[p.exchange]}: move ${p.markMovePct >= 0 ? '+' : ''}${p.markMovePct.toFixed(2)}%, ${extremeLabel} ${formatPrice(p.extremeMark)}, crossed liq: ${p.crossedLiq ? 'yes' : 'no'}`,
+    );
+  }
+
+  for (const u of unavailable) {
+    bullets.push(`${PEER_EXCHANGE_LABELS[u.exchange]}: ${u.status === 'not_listed' ? 'not listed / no data' : 'error'}`);
+  }
+
+  const agentReplyParts: string[] = [];
+
+  if (okPeers.length === 0) {
+    agentReplyParts.push(
+      `We also attempted to compare Mudrex mark prices with peer exchanges (Bybit, Binance, Delta) for ${symbol} in the same time window, but mark data was not available from those venues for this symbol.`,
+    );
+  } else {
+    const peerCrossText =
+      okPeers.filter((p) => p.crossedLiq).length > 0
+        ? `Some peer exchange marks also reached the liquidation level in the same window.`
+        : `Peer exchange marks in the same window did not show the same extreme move to the liquidation level as Mudrex.`;
+
+    agentReplyParts.push(
+      `We compared Mudrex mark prices with ${okPeers.map((p) => PEER_EXCHANGE_LABELS[p.exchange]).join(', ')} for the same ±15 minute window.`,
+      peerCrossText,
+    );
+
+    if (mudrexAbsMove > 0 && okPeers.length > 0) {
+      const avgPeer = okPeers.reduce((s, p) => s + Math.abs(p.markMovePct), 0) / okPeers.length;
+      if (mudrexAbsMove > avgPeer * 1.5 && avgPeer > 0.05) {
+        agentReplyParts.push(
+          `Mudrex mark moved ${mudrexAbsMove.toFixed(2)}% in that window versus roughly ${avgPeer.toFixed(2)}% on average across peers, which can explain different volatility versus other exchanges.`,
+        );
+      }
+    }
+  }
+
+  return {
+    headline,
+    paragraphs,
+    bullets,
+    agentReply: agentReplyParts.join(' '),
+  };
+}
+
+async function attachPeerExchangeData(
+  base: LiquidationCheckResult,
+  input: {
+    peerExchanges?: PeerExchangeId[];
+    normalizedSymbol: string;
+    side: LiquidationSide;
+    liquidationPrice: number;
+    windowStart: number;
+    windowEnd: number;
+    markCandles: MarkCandle[];
+    extremeMark: number;
+    kind: 'hit' | 'miss';
+  },
+): Promise<LiquidationCheckResult> {
+  const peers = input.peerExchanges?.filter(Boolean) ?? [];
+  if (peers.length === 0 || base.kind === 'error') {
+    return base;
+  }
+
+  const peerResults = await fetchPeerExchangesMark(
+    peers,
+    input.normalizedSymbol,
+    input.windowStart,
+    input.windowEnd,
+    input.side,
+    input.liquidationPrice,
+  );
+
+  const markOpen = input.markCandles[0][1];
+  const markClose = input.markCandles[input.markCandles.length - 1][4];
+  const mudrexMarkMovePct = pctFrom(markOpen, markClose);
+
+  const peerAnalysis = buildPeerExchangeAnalysis({
+    kind: input.kind,
+    symbol: input.normalizedSymbol,
+    side: input.side,
+    liquidationPrice: input.liquidationPrice,
+    mudrexExtremeMark: input.extremeMark,
+    mudrexMarkMovePct,
+    peerResults,
+  });
+
+  return { ...base, peerResults, peerAnalysis };
+}
+
 export async function runLiquidationCheck(
   input: LiquidationCheckInput,
 ): Promise<LiquidationCheckResult> {
@@ -501,8 +697,20 @@ export async function runLiquidationCheck(
   const markClose = markCandles[markCandles.length - 1][4];
   const reportMark = findNearestCandle(markCandles as MarkCandle[], reportedEpoch);
 
+  const peerAttachInput = {
+    peerExchanges: input.peerExchanges,
+    normalizedSymbol,
+    side: input.side,
+    liquidationPrice,
+    windowStart,
+    windowEnd,
+    markCandles: typedMarks,
+    extremeMark,
+    kind,
+  };
+
   if (hit) {
-    return {
+    const result: LiquidationCheckResult = {
       kind: 'hit',
       extremeMark,
       extremeTime,
@@ -514,9 +722,10 @@ export async function runLiquidationCheck(
       analysis,
       message: `VALID: Mudrex mark price reached ${formatPrice(extremeMark)} at ${timeLabel}, crossing the liquidation threshold of ${formatPrice(liquidationPrice)}.${historicalNote}`,
     };
+    return attachPeerExchangeData(result, peerAttachInput);
   }
 
-  return {
+  const result: LiquidationCheckResult = {
     kind: 'miss',
     extremeMark,
     extremeTime,
@@ -528,4 +737,5 @@ export async function runLiquidationCheck(
     analysis,
     message: `DID NOT REACH: The ${actualDir.toLowerCase()} Mudrex mark price in the window was ${formatPrice(extremeMark)} at ${timeLabel}. It did not ${expectedDir} the liquidation price of ${formatPrice(liquidationPrice)}.${historicalNote}`,
   };
+  return attachPeerExchangeData(result, peerAttachInput);
 }

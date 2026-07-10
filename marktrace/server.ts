@@ -26,6 +26,7 @@ import {
   runLiquidationCheck,
   type LiquidationCheckInput,
 } from './server-lib/liquidation-check.ts';
+import { isPeerExchangeId, PEER_EXCHANGE_IDS } from './server-lib/peer-exchanges.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,10 +146,57 @@ app.post('/api/usage/track', (req, res) => {
   res.json({ ok: true });
 });
 
+function parseLiquidationCheckBody(body: unknown): LiquidationCheckInput | { error: string } {
+  if (!body || typeof body !== 'object') {
+    return { error: 'Invalid request body.' };
+  }
+
+  const raw = body as Record<string, unknown>;
+  const input: LiquidationCheckInput = {
+    symbol: String(raw.symbol ?? ''),
+    side: raw.side as LiquidationCheckInput['side'],
+    leverage: raw.leverage as LiquidationCheckInput['leverage'],
+    entryPrice: raw.entryPrice as LiquidationCheckInput['entryPrice'],
+    liquidationPrice: raw.liquidationPrice as LiquidationCheckInput['liquidationPrice'],
+    liquidationTime: String(raw.liquidationTime ?? ''),
+    timezone: raw.timezone as LiquidationCheckInput['timezone'],
+  };
+
+  if (raw.peerExchanges !== undefined) {
+    if (!Array.isArray(raw.peerExchanges)) {
+      return { error: 'peerExchanges must be an array of exchange ids.' };
+    }
+    if (raw.peerExchanges.length > PEER_EXCHANGE_IDS.length) {
+      return { error: `At most ${PEER_EXCHANGE_IDS.length} peer exchanges can be selected.` };
+    }
+    const unique: LiquidationCheckInput['peerExchanges'] = [];
+    for (const item of raw.peerExchanges) {
+      if (typeof item !== 'string' || !isPeerExchangeId(item)) {
+        return {
+          error: `Invalid peer exchange. Allowed: ${PEER_EXCHANGE_IDS.join(', ')}.`,
+        };
+      }
+      if (!unique.includes(item)) {
+        unique.push(item);
+      }
+    }
+    if (unique.length > 0) {
+      input.peerExchanges = unique;
+    }
+  }
+
+  return input;
+}
+
 app.post('/api/liquidation/check', liquidationLimiter, async (req, res) => {
   const started = Date.now();
   const meta = getRequestMeta(req);
-  const body = req.body as LiquidationCheckInput;
+  const parsed = parseLiquidationCheckBody(req.body);
+  if ('error' in parsed) {
+    res.status(400).json({ kind: 'error', message: parsed.error });
+    return;
+  }
+  const body = parsed;
   const result = await runLiquidationCheck(body);
   const durationMs = Date.now() - started;
 

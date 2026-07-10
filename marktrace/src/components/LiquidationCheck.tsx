@@ -13,6 +13,33 @@ import { formatEpochForInput } from '../lib/time';
 import { formatPrice } from '../lib/csv';
 import type { MarkCandle, TimezoneId } from '../lib/types';
 
+type PeerExchangeId = 'bybit' | 'binance' | 'delta';
+
+const PEER_EXCHANGES: { id: PeerExchangeId; label: string }[] = [
+  { id: 'bybit', label: 'Bybit' },
+  { id: 'binance', label: 'Binance' },
+  { id: 'delta', label: 'Delta' },
+];
+
+const ALL_PEER_IDS: PeerExchangeId[] = ['bybit', 'binance', 'delta'];
+
+type PeerMarkResult =
+  | {
+      exchange: PeerExchangeId;
+      status: 'ok';
+      extremeMark: number;
+      extremeTime: number;
+      markOpen: number;
+      markClose: number;
+      markMovePct: number;
+      crossedLiq: boolean;
+    }
+  | {
+      exchange: PeerExchangeId;
+      status: 'not_listed' | 'error';
+      message: string;
+    };
+
 type MovementAnalysis = {
   headline: string;
   paragraphs: string[];
@@ -30,6 +57,8 @@ type CheckResult = {
   markClose?: number;
   markCandles?: MarkCandle[];
   analysis?: MovementAnalysis;
+  peerResults?: PeerMarkResult[];
+  peerAnalysis?: MovementAnalysis;
   asset?: {
     symbol: string;
     name: string;
@@ -62,6 +91,8 @@ export function LiquidationCheck() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<CheckResult | null>(null);
   const [clientError, setClientError] = useState<string | null>(null);
+  const [peerCheckEnabled, setPeerCheckEnabled] = useState(false);
+  const [selectedPeers, setSelectedPeers] = useState<PeerExchangeId[]>(ALL_PEER_IDS);
 
   useEffect(() => {
     loadSymbolSuggestions().then(setSuggestions);
@@ -85,7 +116,23 @@ export function LiquidationCheck() {
     setClientError(null);
     setResult(null);
     setStatus('idle');
-  }, [symbol, side, leverage, entryPrice, liqPrice, liqTime, timezone]);
+  }, [symbol, side, leverage, entryPrice, liqPrice, liqTime, timezone, peerCheckEnabled, selectedPeers]);
+
+  const togglePeerExchange = (id: PeerExchangeId) => {
+    setSelectedPeers((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((p) => p !== id);
+      }
+      return [...prev, id];
+    });
+  };
+
+  const handlePeerCheckToggle = (enabled: boolean) => {
+    setPeerCheckEnabled(enabled);
+    if (enabled && selectedPeers.length === 0) {
+      setSelectedPeers(ALL_PEER_IDS);
+    }
+  };
 
   const handleTimezoneChange = (next: TimezoneId) => {
     setTimezone(next);
@@ -104,6 +151,11 @@ export function LiquidationCheck() {
 
     if (!leverage.trim() || !entryPrice.trim() || !liqPrice.trim() || !liqTime.trim()) {
       setClientError('Symbol, leverage, entry price, liquidation price, and time are required.');
+      return;
+    }
+
+    if (peerCheckEnabled && selectedPeers.length === 0) {
+      setClientError('Select at least one peer exchange for comparison.');
       return;
     }
 
@@ -128,6 +180,9 @@ export function LiquidationCheck() {
           liquidationPrice: liqPrice,
           liquidationTime: liqTime,
           timezone,
+          ...(peerCheckEnabled && selectedPeers.length > 0
+            ? { peerExchanges: selectedPeers }
+            : {}),
         }),
       });
 
@@ -312,6 +367,46 @@ export function LiquidationCheck() {
           </div>
         </div>
 
+        <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={peerCheckEnabled}
+              onChange={(e) => handlePeerCheckToggle(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+            />
+            <span>
+              <span className="block text-sm font-medium text-foreground">Peer Exchange Check</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Compare Mudrex mark price with Bybit, Binance, and Delta mark data in the same ±15
+                minute window.
+              </span>
+            </span>
+          </label>
+
+          {peerCheckEnabled && (
+            <div className="flex flex-wrap gap-2 pl-7">
+              {PEER_EXCHANGES.map(({ id, label }) => {
+                const active = selectedPeers.includes(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => togglePeerExchange(id)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      active
+                        ? 'border-primary bg-primary-subtle text-primary'
+                        : 'border-border bg-card text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {clientError && (
           <div className="alert-destructive rounded-lg px-4 py-3 text-sm">
             {clientError}
@@ -337,7 +432,11 @@ export function LiquidationCheck() {
             <div className="absolute inset-0 animate-spin rounded-full border-4 border-primary-ring border-t-primary" />
           </div>
           <p className="text-center text-sm font-medium text-muted-foreground">
-            Checking Mudrex asset specs and mark price around {liqTime.replace('T', ' ')}…
+            Checking Mudrex asset specs and mark price around {liqTime.replace('T', ' ')}
+            {peerCheckEnabled && selectedPeers.length > 0
+              ? ` · comparing with ${selectedPeers.length} peer exchange${selectedPeers.length > 1 ? 's' : ''}`
+              : ''}
+            …
           </p>
           <div className="h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-border">
             <div
@@ -472,6 +571,96 @@ export function LiquidationCheck() {
                   {result.analysis.agentReply}
                 </p>
               </div>
+            </div>
+          )}
+
+          {result.peerAnalysis && (
+            <div className="animate-in surface-panel rounded-xl p-4 sm:p-5">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-foreground">Peer exchange analysis</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {result.peerAnalysis.headline}
+                </p>
+              </div>
+
+              {result.peerResults && result.peerResults.length > 0 && (
+                <div className="mb-4 overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full min-w-[520px] text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        <th className="px-3 py-2 font-semibold uppercase tracking-wide text-muted-foreground">
+                          Exchange
+                        </th>
+                        <th className="px-3 py-2 font-semibold uppercase tracking-wide text-muted-foreground">
+                          Status
+                        </th>
+                        <th className="px-3 py-2 font-semibold uppercase tracking-wide text-muted-foreground">
+                          Window move
+                        </th>
+                        <th className="px-3 py-2 font-semibold uppercase tracking-wide text-muted-foreground">
+                          Extreme mark
+                        </th>
+                        <th className="px-3 py-2 font-semibold uppercase tracking-wide text-muted-foreground">
+                          Crossed liq
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.peerResults.map((peer) => {
+                        const label =
+                          PEER_EXCHANGES.find((p) => p.id === peer.exchange)?.label ?? peer.exchange;
+                        return (
+                          <tr key={peer.exchange} className="border-b border-border last:border-0">
+                            <td className="px-3 py-2 font-medium text-foreground">{label}</td>
+                            <td className="px-3 py-2 text-muted-foreground">
+                              {peer.status === 'ok'
+                                ? 'OK'
+                                : peer.status === 'not_listed'
+                                  ? 'Not listed'
+                                  : 'Error'}
+                            </td>
+                            <td className="px-3 py-2 tabular-nums text-muted-foreground">
+                              {peer.status === 'ok'
+                                ? `${peer.markMovePct >= 0 ? '+' : ''}${peer.markMovePct.toFixed(2)}%`
+                                : '—'}
+                            </td>
+                            <td className="px-3 py-2 tabular-nums text-muted-foreground">
+                              {peer.status === 'ok' ? formatPrice(peer.extremeMark) : '—'}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground">
+                              {peer.status === 'ok' ? (peer.crossedLiq ? 'Yes' : 'No') : '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {result.peerAnalysis.paragraphs.map((paragraph, i) => (
+                  <p key={i} className="text-sm leading-relaxed text-muted-foreground">
+                    {paragraph}
+                  </p>
+                ))}
+                {result.peerAnalysis.bullets.length > 0 && (
+                  <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                    {result.peerAnalysis.bullets.map((bullet, i) => (
+                      <li key={i}>{bullet}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {result.peerAnalysis.agentReply && (
+                <div className="mt-5 rounded-lg border border-border bg-muted/50 p-4">
+                  <h4 className="meta-label">Peer comparison note for tickets</h4>
+                  <p className="mt-2 select-text text-sm leading-relaxed text-foreground">
+                    {result.peerAnalysis.agentReply}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

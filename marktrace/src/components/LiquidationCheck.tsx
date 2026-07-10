@@ -393,12 +393,14 @@ export function LiquidationCheck() {
                     key={id}
                     type="button"
                     onClick={() => togglePeerExchange(id)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    aria-pressed={active}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                       active
-                        ? 'border-primary bg-primary-subtle text-primary'
+                        ? 'border-success-border bg-success-subtle text-success'
                         : 'border-border bg-card text-muted-foreground hover:bg-muted'
                     }`}
                   >
+                    {active && <Check size={14} strokeWidth={2.5} aria-hidden />}
                     {label}
                   </button>
                 );

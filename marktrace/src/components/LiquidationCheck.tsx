@@ -15,28 +15,48 @@ import type { MarkCandle, TimezoneId } from '../lib/types';
 
 type PeerExchangeId = 'bybit' | 'binance' | 'delta';
 
-const PEER_EXCHANGES: { id: PeerExchangeId; label: string; logo: string }[] = [
-  { id: 'bybit', label: 'Bybit', logo: '/exchanges/bybit.png' },
-  { id: 'binance', label: 'Binance', logo: '/exchanges/binance.png' },
-  { id: 'delta', label: 'Delta', logo: '/exchanges/delta.png' },
+const PEER_EXCHANGES: {
+  id: PeerExchangeId;
+  label: string;
+  logo: string;
+  logoVariant: 'icon' | 'wordmark';
+}[] = [
+  { id: 'bybit', label: 'Bybit', logo: '/exchanges/bybit.png', logoVariant: 'wordmark' },
+  { id: 'binance', label: 'Binance', logo: '/exchanges/binance.png', logoVariant: 'icon' },
+  { id: 'delta', label: 'Delta', logo: '/exchanges/delta.png', logoVariant: 'icon' },
 ];
 
 function PeerExchangeBrand({
   id,
   showLabel = true,
-  logoClassName = 'h-4 w-4 shrink-0 rounded object-contain',
+  compact = false,
 }: {
   id: PeerExchangeId;
   showLabel?: boolean;
-  logoClassName?: string;
+  compact?: boolean;
 }) {
   const peer = PEER_EXCHANGES.find((p) => p.id === id);
   if (!peer) return null;
 
+  if (peer.logoVariant === 'wordmark') {
+    return (
+      <img
+        src={peer.logo}
+        alt={peer.label}
+        className={`${compact ? 'h-3.5' : 'h-5'} w-auto max-w-[5.5rem] shrink-0 object-contain object-left`}
+      />
+    );
+  }
+
+  const boxSize = compact ? 'h-5 w-5' : 'h-6 w-6';
+  const imgSize = compact ? 'h-4 w-4' : 'h-5 w-5';
+
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded bg-black/90 ring-1 ring-border/60">
-        <img src={peer.logo} alt="" className={logoClassName} aria-hidden />
+      <span
+        className={`inline-flex ${boxSize} shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#0b0e11] p-0.5 ring-1 ring-border/40`}
+      >
+        <img src={peer.logo} alt="" className={`${imgSize} object-contain`} aria-hidden />
       </span>
       {showLabel && <span>{peer.label}</span>}
     </span>
@@ -408,8 +428,10 @@ export function LiquidationCheck() {
 
           {peerCheckEnabled && (
             <div className="flex flex-wrap gap-2 pl-7">
-              {PEER_EXCHANGES.map(({ id, label }) => {
+              {PEER_EXCHANGES.map((peer) => {
+                const { id, label, logoVariant } = peer;
                 const active = selectedPeers.includes(id);
+                const isWordmark = logoVariant === 'wordmark';
                 return (
                   <button
                     key={id}
@@ -423,11 +445,14 @@ export function LiquidationCheck() {
                         : 'border-border bg-card text-muted-foreground hover:bg-muted'
                     }`}
                   >
-                    <PeerExchangeBrand id={id} showLabel={false} logoClassName="h-3.5 w-3.5 object-contain" />
-                    <span className="inline-flex items-center gap-1">
-                      {active && <Check size={14} strokeWidth={2.5} aria-hidden />}
-                      {label}
-                    </span>
+                    <PeerExchangeBrand id={id} showLabel={false} compact />
+                    {!isWordmark && (
+                      <span className="inline-flex items-center gap-1">
+                        {active && <Check size={14} strokeWidth={2.5} aria-hidden />}
+                        {label}
+                      </span>
+                    )}
+                    {isWordmark && active && <Check size={14} strokeWidth={2.5} aria-hidden />}
                   </button>
                 );
               })}

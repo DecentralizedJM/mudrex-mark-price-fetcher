@@ -15,11 +15,33 @@ import type { MarkCandle, TimezoneId } from '../lib/types';
 
 type PeerExchangeId = 'bybit' | 'binance' | 'delta';
 
-const PEER_EXCHANGES: { id: PeerExchangeId; label: string }[] = [
-  { id: 'bybit', label: 'Bybit' },
-  { id: 'binance', label: 'Binance' },
-  { id: 'delta', label: 'Delta' },
+const PEER_EXCHANGES: { id: PeerExchangeId; label: string; logo: string }[] = [
+  { id: 'bybit', label: 'Bybit', logo: '/exchanges/bybit.png' },
+  { id: 'binance', label: 'Binance', logo: '/exchanges/binance.png' },
+  { id: 'delta', label: 'Delta', logo: '/exchanges/delta.png' },
 ];
+
+function PeerExchangeBrand({
+  id,
+  showLabel = true,
+  logoClassName = 'h-4 w-4 shrink-0 rounded object-contain',
+}: {
+  id: PeerExchangeId;
+  showLabel?: boolean;
+  logoClassName?: string;
+}) {
+  const peer = PEER_EXCHANGES.find((p) => p.id === id);
+  if (!peer) return null;
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded bg-black/90 ring-1 ring-border/60">
+        <img src={peer.logo} alt="" className={logoClassName} aria-hidden />
+      </span>
+      {showLabel && <span>{peer.label}</span>}
+    </span>
+  );
+}
 
 const ALL_PEER_IDS: PeerExchangeId[] = ['bybit', 'binance', 'delta'];
 
@@ -394,14 +416,18 @@ export function LiquidationCheck() {
                     type="button"
                     onClick={() => togglePeerExchange(id)}
                     aria-pressed={active}
-                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    aria-label={`${active ? 'Deselect' : 'Select'} ${label}`}
+                    className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors sm:px-3 ${
                       active
                         ? 'border-success-border bg-success-subtle text-success'
                         : 'border-border bg-card text-muted-foreground hover:bg-muted'
                     }`}
                   >
-                    {active && <Check size={14} strokeWidth={2.5} aria-hidden />}
-                    {label}
+                    <PeerExchangeBrand id={id} showLabel={false} logoClassName="h-3.5 w-3.5 object-contain" />
+                    <span className="inline-flex items-center gap-1">
+                      {active && <Check size={14} strokeWidth={2.5} aria-hidden />}
+                      {label}
+                    </span>
                   </button>
                 );
               })}
@@ -608,12 +634,11 @@ export function LiquidationCheck() {
                       </tr>
                     </thead>
                     <tbody>
-                      {result.peerResults.map((peer) => {
-                        const label =
-                          PEER_EXCHANGES.find((p) => p.id === peer.exchange)?.label ?? peer.exchange;
-                        return (
+                      {result.peerResults.map((peer) => (
                           <tr key={peer.exchange} className="border-b border-border last:border-0">
-                            <td className="px-3 py-2 font-medium text-foreground">{label}</td>
+                            <td className="px-3 py-2 font-medium text-foreground">
+                              <PeerExchangeBrand id={peer.exchange} />
+                            </td>
                             <td className="px-3 py-2 text-muted-foreground">
                               {peer.status === 'ok'
                                 ? 'OK'
@@ -633,8 +658,7 @@ export function LiquidationCheck() {
                               {peer.status === 'ok' ? (peer.crossedLiq ? 'Yes' : 'No') : '—'}
                             </td>
                           </tr>
-                        );
-                      })}
+                      ))}
                     </tbody>
                   </table>
                 </div>
